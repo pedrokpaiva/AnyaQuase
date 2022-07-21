@@ -109,10 +109,10 @@ public class AnyaSearch : MonoBehaviour, IMBRunnable
         {
             SearchNode current = (SearchNode)open.RemoveMin();
             //if(verbose) { System.out.println("expanding (f="+current.getKey()+") "+current.toString()); }
-            if (isRecording)
+            /*if (isRecording)
             {
                 snapshotExpand.Invoke(current.GetData());
-            }
+            }*/
 
             expander.Expand(current.GetData());
             expanded++;

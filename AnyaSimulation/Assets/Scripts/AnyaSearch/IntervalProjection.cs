@@ -106,7 +106,7 @@ namespace Anya_2d
 
             // clip the interval if visibility from the root is obstructed.
             // NB: +1 because we convert from tile coordinates to point coords
-            max_left = grid.Scan_cells_left((int)ileft, check_vis_row) + 1;
+            max_left = grid.Scan_cells_left((int)ileft, check_vis_row);
             left = Math.Max(ileft - lrun / rise, max_left);
 
             max_right = grid.Scan_cells_right((int)iright, check_vis_row);
