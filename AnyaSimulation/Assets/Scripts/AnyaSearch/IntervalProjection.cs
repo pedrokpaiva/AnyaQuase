@@ -5,11 +5,11 @@ namespace Anya_2d
 {
     public class IntervalProjection
     {
-        public double left;
-        public double right;
+        public double left;          // sempre serão ou um inteiro, em caso de intervalos fechados [a, b],
+        public double right;         // ou um double, em caso de intervalos abertos (a, b) = [a - smallest_step, b - smallest_step]
 
         // the furthest point left (resp. right) which is
-        // visible from the the left (resp. right) endpoint
+        // visible from the left (resp. right) endpoint
         // of the projected interval.
         public double max_left;
         public double max_right;
@@ -57,8 +57,7 @@ namespace Anya_2d
                     (int)node.root.x, (int)node.root.y, grid);
         }
 
-        public void Project(double ileft, double iright, int irow,
-                int rootx, int rooty, GridGraph grid)
+        public void Project(double ileft, double iright, int irow, int rootx, int rooty, GridGraph grid)
         {
             observable = false;
             valid = false;
@@ -91,9 +90,9 @@ namespace Anya_2d
 
 
             valid = grid.Get_cell_is_traversable(
-                        (int)(ileft + grid.smallest_step_div2), check_vis_row) &&
+                        (int)(ileft + grid.smallest_step), check_vis_row) &&
                     grid.Get_cell_is_traversable(
-                        (int)(iright - grid.smallest_step_div2), check_vis_row);
+                        (int)(iright - grid.smallest_step), check_vis_row);
 
             if (!valid) { return; }
 
@@ -120,7 +119,7 @@ namespace Anya_2d
             if (left >= max_right)
             {
                 left = grid.Get_cell_is_traversable(
-                        (int)(ileft - grid.smallest_step_div2), check_vis_row) ?
+                        (int)(ileft - grid.smallest_step), check_vis_row) ?
                                 right : max_left;
             }
             if (right <= max_left)
@@ -131,32 +130,28 @@ namespace Anya_2d
             }
         }
 
-        // @param ileft: the left endpoint of the interval being projected
-        // @param iright: the right endpoint of the interval being projected
-        // @param rootx, @param rooty: the coordinates of the root point
-        public void Project_flat(double ileft, double iright,
-                int rootx, int rooty, GridGraph grid)
+        /// <summary>
+        /// Faz a projeção flat do intervalo, alterando suas variáveis e características.
+        /// (left, right, deadend, intermediate, valid)
+        /// </summary>
+        public void Project_flat(double ileft, double iright, int rootx, int rooty, GridGraph grid)
         {
-            if (rootx <= ileft)
+            if (rootx <= ileft)      // se a raiz está pra esquerda do endpoint da esquerda do intervalo
             {
-                left = iright;
-                right = grid.Scan_right(left, rooty);
-                deadend = !(
-                    grid.Get_cell_is_traversable((int)right, rooty) &&
-                    grid.Get_cell_is_traversable((int)right, rooty - 1));
+                left = iright;       // o endpoint da esquerda da projeção flat vai ser a direita do intervalo
+                right = grid.Scan_right(left, rooty);    // passa o endpoint da esquerda da projeção e a linha
+                deadend = !( grid.Get_cell_is_traversable((int)right, rooty) 
+                          && grid.Get_cell_is_traversable((int)right, rooty - 1));
             }
-            else
+            else                     // se a raiz está pra direita do endpoint da esquerda do intervalo
             {
-                right = ileft;
-                left = grid.Scan_left(right, rooty);
-                deadend = !(
-                    grid.Get_cell_is_traversable((int)(left - grid.smallest_step_div2), rooty) &&
-                    grid.Get_cell_is_traversable((int)(left - grid.smallest_step_div2), rooty - 1));
+                right = ileft;       // o endpoint da direita da projeção flat vai ser a esquerda do intervalo
+                left = grid.Scan_left(right, rooty);     // passa o endpoint da direita da projeção e a linha
+                deadend = !( grid.Get_cell_is_traversable((int)(left - grid.smallest_step), rooty) 
+                          && grid.Get_cell_is_traversable((int)(left - grid.smallest_step), rooty - 1));
             }
 
-            intermediate =
-                    grid.Get_cell_is_traversable((int)left, rooty) &&
-                    grid.Get_cell_is_traversable((int)left, rooty - 1);
+            intermediate = grid.Get_cell_is_traversable((int)left, rooty) && grid.Get_cell_is_traversable((int)left, rooty - 1);
 
             row = rooty;
             valid = (left != right);
@@ -227,7 +222,7 @@ namespace Anya_2d
                 }
 
                 right = max_right = ileft;
-                left = max_left = grid.Scan_cells_left((int)right - 1, check_vis_row) + 1;
+                left = max_left = grid.Scan_cells_left((int)right - 1, check_vis_row);
             }
             valid = true;
             observable = false;

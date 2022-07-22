@@ -4,8 +4,8 @@
     {
         private readonly double pathCost;
         private readonly V vertex;
-        private readonly Path<V>? next;
-        private Path<V>? prev;
+        private readonly Path<V> next;
+        private Path<V> prev;
 
         public Path(V vertex, Path<V> next, double pathCost)
         {
@@ -22,11 +22,11 @@
         {
             return pathCost;
         }
-        public Path<V>? GetNext()
+        public Path<V> GetNext()
         {
             return next;
         }
-        public Path<V>? GetPrev()
+        public Path<V> GetPrev()
         {
             return prev;
         }

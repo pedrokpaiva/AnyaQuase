@@ -4,179 +4,97 @@ using UnityEngine;
 
 public class Anya
 {
-    private static int RES = 10000;
-
     private static AnyaSearch anya = null;
-    private static GridGraph storedGraph = null;
-
+    protected GridGraph storedGraph;
     private Path<Node> pathStartNode = null;
-    protected GridGraph graph;
-
-    protected int[] parent;
-    protected int sizeX;
-    protected int sizeXplusOne;
+    
+    protected int[] parent; 
+    
+    protected int sizeX;         // dimensões do gridgraph
     protected int sizeY;
+    protected int sizeXplusOne;
+    
+    protected int startX;        // coordenadas x e y do ponto inicial e destino da busca
+    protected int startY;
+    protected int targetX;
+    protected int targetY;
 
-    protected int sx;
-    protected int sy;
-    protected int ex;
-    protected int ey;
 
-    private int ticketNumber = -1;
-
-    private bool recordingMode;
-    private bool usingStaticMemory = false;
-
-    private static void Initialise(GridGraph graph)
+    public Anya(GridGraph graph, int sizeX, int sizeY, int indexSX, int indexSY, int indexTX, int indexTY)
     {
-        if (graph == storedGraph)
-        {
-            return;
-        }
+        this.storedGraph = graph;
+        this.sizeX = sizeX;
+        this.sizeXplusOne = sizeX + 1;
+        this.sizeY = sizeY;
+        this.startX = indexSX;
+        this.startY = indexSY;
+        this.targetX = indexTX;
+        this.targetY = indexTY;
 
+        Initialise(graph, indexSX, indexSY, indexTX, indexTY);  
+    }
+
+
+    /// <summary>
+    /// Inicializa as informações para começar a busca.
+    /// </summary>
+    private static void Initialise(GridGraph grid, int indexSX, int indexSY, int indexTX, int indexTY)
+    {
         try
         {
-            GridGraph grid = graph;
             anya = new AnyaSearch(new AnyaExpansionPolicy(grid));
-            storedGraph = graph;
 
+            Node start = new Node(null, new Interval(0, 0, 0), 0, 0);
+            Node target = new Node(null, new Interval(0, 0, 0), 0, 0);
+            start.root.Set(indexSX, indexSY);
+            start.interval.Init(indexSX, indexSX, indexSY);
+            target.root.Set(indexTX, indexTY);
+            target.interval.Init(indexTX, indexTX, indexTY);
+            
+            anya.startNode = start;
+            anya.targetNode = target;
         }
         catch (Exception e)
         {
-            Console.WriteLine(e.Message); ;
+            Console.WriteLine(e.Message); 
         }
-
-        anya.isRecording = false;
     }
 
-    public Anya(GridGraph graph, int sizeX, int sizeY,
-            int sx, int sy, int ex, int ey)
-    {
-        this.graph = graph;
-        this.sizeX = sizeX;
-        sizeXplusOne = sizeX + 1;
-        this.sizeY = sizeY;
-        this.sx = sx;
-        this.sy = sy;
-        this.ex = ex;
-        this.ey = ey;
-        Initialise(graph);
-        anya.isRecording = false;
-
-        Node start = new Node(null, new Interval(0, 0, 0), 0, 0);
-        Node target = new Node(null, new Interval(0, 0, 0), 0, 0);
-        anya.mb_start_ = start;
-        anya.mb_target_ = target;
-
-        start.root.Set(sx, sy);
-        start.interval.Init(sx, sx, sy);
-        target.root.Set(ex, ey);
-        target.interval.Init(ex, ex, ey);
-    }
-
-    /**
-     * Call this to compute the path.
-     */
+    /// <summary>
+    /// Computa o caminho através do algoritmo Anya, e ajusta os parentescos dos nós que o compõem
+    /// (para que o backtracking seja possível).
+    /// </summary>
     public void ComputePath()
     {
-        pathStartNode = anya.Search(anya.mb_start_, anya.mb_target_);
-        //pathLength = anya.mb_cost_;
-    }
+        pathStartNode = anya.Search(anya.startNode, anya.targetNode);   
+    }                                                                   
 
-    /**
-     * @return retrieve the path computed by the algorithm
-     */
+    /// <summary>
+    /// Retorna uma matriz com os pontos do caminho computado.
+    /// Cada linha descreve um ponto e as colunas representam as coordenadas.
+    /// p = (x, y) <=> p = (matriz[p][0], matriz[p][1])
+    /// </summary>
     public int[][] GetPath()
     {
-        int length = 0;
+        int length = 0;                          
         Path<Node> current = pathStartNode;
         while (current != null)
-        {
-            current = current.GetNext();
-            ++length;
+        { 
+            current = current.GetNext();          
+            ++length;                            // conta quantos nós tem no caminho
         }
-        int[][] path = new int[length][];
+        int[][] path = new int[length][];        // inicializa as linhas da matriz com o número de nós do caminho
 
         current = pathStartNode;
         int i = 0;
         while (current != null)
         {
-            Vector2 p = current.GetVertex().root;
-            path[i] = new int[] { (int)p.x, (int)p.y };
-            current = current.GetNext();
+            Vector2 point = current.GetVertex().root;
+            path[i] = new int[] { (int)point.x, (int)point.y };  // seta as colunas com as coordenadas do ponto da linha correspondente,
+            current = current.GetNext();                         // de acordo com a ordem no trajeto
             ++i;
         }
 
         return path;
     }
-
-    /**
-     * @return directly get path length without computing path.
-     * Has to run fast, unlike getPath.
-     */
-    public float GetPathLength()
-    {
-        return (float)anya.mb_cost_;
-    }
-    /*
-        @Override
-        public void startRecording()
-        {
-            super.startRecording();
-            anya.isRecording = true;
-        }
-
-        @Override
-        public void stopRecording()
-        {
-            super.stopRecording();
-            anya.isRecording = false;
-        }
-
-
-        private final void snapshotInsert(Node Node)
-        {
-            AnyaInterval in = Node.interval;
-
-            Integer[] line = new Integer[7];
-            line[0] = in.getRow();
-            line[1] = (int)(in.getLeft() * RES);
-            line[2] = RES;
-            line[3] = (int)(in.getRight() * RES);
-            line[4] = RES;
-            line[5] = (int)Node.root.getX();
-            line[6] = (int)Node.root.getY();
-            currSnapshot.add(SnapshotItem.generate(line));
-
-            maybeSaveSearchSnapshot();
-        }
-
-        private final void snapshotExpand(Node Node)
-        {
-            AnyaInterval in = Node.interval;
-
-            Integer[] line = new Integer[5];
-            line[0] = in.getRow();
-            line[1] = (int)(in.getLeft() * RES);
-            line[2] = RES;
-            line[3] = (int)(in.getRight() * RES);
-            line[4] = RES;
-            currSnapshot.add(SnapshotItem.generate(line));
-
-            maybeSaveSearchSnapshot();
-        }
-
-        @Override
-        protected List<SnapshotItem> computeSearchSnapshot()
-        {
-            return new ArrayList<>(currSnapshot);
-        }
-
-        public static void clearMemory()
-        {
-            anya = null;
-            storedGraph = null;
-            System.gc();
-        }
-    */
 }
