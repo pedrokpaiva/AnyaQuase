@@ -1,43 +1,75 @@
 ﻿
 namespace Anya_2d
 {
+    /// <summary>
+    /// Posição numa grid 2D
+    /// </summary>
     public class GridPosition
     {
-        int X;
-        int Y;
+        private int x;
+        private int y;
 
+        /// <summary>
+        /// Cria uma posição na grid padrão x = y = 0
+        /// </summary>
         public GridPosition()
         {
-            this.X = 0;
-            this.Y = 0;
+            x = 0;
+            y = 0;
         }
 
+        /// <summary>
+        /// Cria uma posição na grid a partir de uma coordenada x e uma y
+        /// </summary>
+        /// <param name="x"></param>
+        /// <param name="y"></param>
         public GridPosition(int x, int y)
         {
-            this.X = x;
-            this.Y = y;
+            this.x = x;
+            this.y = y;
         }
 
+        /// <summary>
+        /// Getter de x
+        /// </summary>
+        /// <returns>x</returns>
         public int GetX()
         {
-            return X;
+            return x;
         }
 
+        /// <summary>
+        /// Setter de x
+        /// </summary>
+        /// <param name="x"></param>
         public void SetX(int x)
         {
-            this.X = x;
+            this.x = x;
         }
 
+        /// <summary>
+        /// Getter de y
+        /// </summary>
+        /// <returns>y</returns>
         public int GetY()
         {
-            return Y;
+            return y;
         }
 
+        /// <summary>
+        /// Setter de y
+        /// </summary>
+        /// <param name="y"></param>
         public void SetY(int y)
         {
-            this.Y = y;
+            this.y = y;
         }
 
+        /// <summary>
+        /// Verifica se duas posições são iguais
+        /// </summary>
+        /// <param name="obj"></param>
+        /// <returns></returns>
         public override bool Equals(object obj)
         {
             if (obj == null || !typeof(GridPosition).IsInstanceOfType(obj))
@@ -45,18 +77,26 @@ namespace Anya_2d
                 return false;
             }
             GridPosition other = (GridPosition)obj;
-            return X == other.X && Y == other.Y;
+            return x == other.x && y == other.y;
         }
 
+        /// <summary>
+        /// Converte a posição na grid em string
+        /// </summary>
+        /// <returns></returns>
         public override string ToString()
         {
-            return "[" + X + "," + Y + "]";
+            return "[" + x + "," + y + "]";
         }
 
+        /// <summary>
+        /// Gera um código para uma tabela Hash
+        /// </summary>
+        /// <returns></returns>
         public override int GetHashCode()
         {
-            int result = X;
-            result = 31 * result + Y;
+            int result = x;
+            result = 31 * result + y;
             return result;
         }
     }

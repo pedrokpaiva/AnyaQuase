@@ -16,6 +16,13 @@
         public double otherCost = 0;
         public double zoneCost = 0;
 
+        /// <summary>
+        /// Cria uma aresta a partir de uma aresta, vértices de início e fim e um custo
+        /// </summary>
+        /// <param name="id"></param>
+        /// <param name="start"></param>
+        /// <param name="end"></param>
+        /// <param name="weight"></param>
         public BaseEdge(long id, BaseVertex start, BaseVertex end, double weight)
         {
 
@@ -25,31 +32,37 @@
             this.weight = weight;
         }
 
-        ///<summary>
-        ///Verifica se o id de duas arestas são iguais
-        ///</summary>
+        /// <summary>
+        /// Verifica se duas arestas são iguais baseado no id
+        /// </summary>
+        /// <param name="o"></param>
+        /// <returns></returns>
         public bool Equals(BaseEdge o)
         {
             return id == o.id;
         }
 
-        ///<summary>
-        ///Retorna o comprimento da aresta
-        ///</summary>
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns>comprimento da aresta</returns>
         public abstract double GetLength();
 
 
-        ///<summary>
-        ///Retorna o custo de atravessar a aresta
-        ///</summary>
+        /// <summary>
+        /// Getter de weight
+        /// </summary>
+        /// <returns>custo</returns>
         public double GetEdgeWeight()
         {
             return weight;
         }
 
-        ///<summary>
-        ///Compara o id de duas arestas
-        ///</summary>
+        /// <summary>
+        /// Compara os ids de duas arestas
+        /// </summary>
+        /// <param name="o"></param>
+        /// <returns></returns>
         public int CompareTo(BaseEdge o)
         {
             return id.CompareTo(o.id);
