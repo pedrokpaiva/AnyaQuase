@@ -1,8 +1,7 @@
 using System;
 using System.Collections.Generic;
-using UnityEngine;
 
-public class FibonacciHeap<T> : MonoBehaviour
+public class FibonacciHeap<T>
 {
     //~ Static fields/initializers ---------------------------------------------
 

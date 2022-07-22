@@ -2,7 +2,7 @@ using Anya_2d;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class AnyaExpansionPolicy : MonoBehaviour, IExpansionPolicy<Node>
+public class AnyaExpansionPolicy : IExpansionPolicy<Node>
 {
     private GridGraph grid_;
     private AnyaHeuristic heuristic_;
@@ -158,13 +158,13 @@ public class AnyaExpansionPolicy : MonoBehaviour, IExpansionPolicy<Node>
         // certain successors will be ignored if the start is a double-corner
         bool startIsDoubleCorner = grid_.Get_point_is_double_corner((int)node.root.x, (int)node.root.y);
 
-        
+
         // NB: hacky implementation; we use a fake root for the projection
         IntervalProjection projection = new IntervalProjection();
         if (!startIsDoubleCorner)
         {
             // generate flat observable successors left of the start point
-            projection.Project(rootx, rootx, rooty, rootx + 1, rooty, grid_);  
+            projection.Project(rootx, rootx, rooty, rootx + 1, rooty, grid_);
             Generate_observable_flat__(projection, rootx, rooty, node, retval);
         }
 

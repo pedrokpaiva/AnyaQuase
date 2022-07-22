@@ -3,8 +3,8 @@ using System;
 using System.Collections;
 using UnityEngine;
 
-public class AnyaSearch : MonoBehaviour
-{    
+public class AnyaSearch
+{
     private AnyaExpansionPolicy expander;
     private IHeuristic<Node> heuristic;
     private FibonacciHeap<Node> open;               // all the yet-to-be-expanded search nodes ordered by f value
@@ -20,7 +20,7 @@ public class AnyaSearch : MonoBehaviour
     public int insertions;
     public int generated;
     public int heap_ops;
- 
+
     public Node startNode;
     public Node targetNode;
     public double mb_cost_;
@@ -29,9 +29,9 @@ public class AnyaSearch : MonoBehaviour
 
     public AnyaSearch(AnyaExpansionPolicy expander)
     {
-        this.roots_ = new Hashtable(65535);
-        this.open = new FibonacciHeap<Node>();
-        this.heuristic = expander.Heuristic();
+        roots_ = new Hashtable(65535);
+        open = new FibonacciHeap<Node>();
+        heuristic = expander.Heuristic();
         this.expander = expander;
     }
 
@@ -46,7 +46,7 @@ public class AnyaSearch : MonoBehaviour
         roots_.Clear();
     }
 
-  
+
     private bool PointsEqual(Vector2 p1, Vector2 p2)
     {
         return (int)p1.x == (int)p2.x && (int)p1.y == (int)p2.y;
@@ -93,7 +93,7 @@ public class AnyaSearch : MonoBehaviour
         {
             SearchNode current = (SearchNode)open.RemoveMin();          // remove o search node com menor custo de open
             expander.Expand(current.GetData());
-            
+
             if (current.GetData().interval.Contains(target.root))
             {
                 // found the goal
@@ -156,8 +156,8 @@ public class AnyaSearch : MonoBehaviour
                             new_g_value);
                     roots_.Add(root_hash, neighbour);
 
-                
-                    
+
+
                 }
                 else
                 {
