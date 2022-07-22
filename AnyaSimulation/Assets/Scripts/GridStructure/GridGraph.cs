@@ -14,18 +14,16 @@ namespace Anya_2d
         private static float SQRT_TWO_MINUS_ONE = (float)(Math.Sqrt(2) - 1);
         public static double epsilon = 0.0000001;
 
-        public double smallest_step;        // menor distância entre dois pontos contínuos adjacentes 
-        public double smallest_step_div2;   // menor distância entre dois pontos contínuos adjacentes dividido por 2
+        public double smallest_step;   // menor distância entre dois pontos contínuos adjacentes
 
         public GridGraph(int width, int height)
         {
-            sizeX = width;
-            sizeY = height;
+            this.sizeX = width;
+            this.sizeY = height;
 
-            tiles = new bool[sizeY, sizeX];
+            this.tiles = new bool[sizeY, sizeX];
 
-            smallest_step = Math.Min(1 / width, 1 / height);
-            smallest_step_div2 = smallest_step / 2;
+            this.smallest_step = Math.Min((1 / width)/2, (1 / height)/2);
         }
 
         public int Get_width()
@@ -117,7 +115,7 @@ namespace Anya_2d
         /// </summary>
         public bool Get_cell_is_traversable(int cx, int cy)
         {
-            return !IsBlocked(cx, cy) ||
+            return  !IsBlocked(cx, cy) ||
                     !IsBlocked(cx + 1, cy) ||
                     !IsBlocked(cx, cy + 1) ||
                     !IsBlocked(cx + 1, cy + 1);
@@ -167,14 +165,15 @@ namespace Anya_2d
 
         /// <summary>
         /// Escaneia as células do grid, começando em (x,y) e indo na direção positiva.
-        /// Retorna as coordenadas x do primeiro ponto de um obstáculo atingido.
+        /// Retorna as coordenadas x do primeiro ponto de um obstáculo atingido, na linha atual
+        /// ou na linha de cima.
         /// Se nenhum obstáculo foi atingido, retorna o índice do último ponto da linha.
         /// </summary>
         public int Scan_cells_right(int x, int y)
         {
             for (int i = x; i < sizeX; i++)
             {
-                if (!Get_cell_is_traversable(i, y))
+                if (!Get_cell_is_traversable(i, y) || !Get_cell_is_traversable(i, y + 1))
                 {
                     return i;
                 }
@@ -184,15 +183,15 @@ namespace Anya_2d
 
         /// <summary>
         /// Escaneia as células do grid, começando em (x,y) e indo na direção negativa.
-        /// Retorna as coordenadas x do primeiro ponto de um obstáculo atingido.
+        /// Retorna as coordenadas x do primeiro ponto de um obstáculo atingido, na linha atual
+        /// ou na linha de cima.
         /// Se nenhum obstáculo foi atingido, retorna o índice do primeiro ponto da linha.
-        /// OBS: LEMBRAR DE MUDAR NAS CHAMADAS DESSA FUNÇÃO QUE NÃO É MAIS PRA SOMAR 1, JA A SOMA DE 1 EMBUTIDA NA FUNÇÃO
         /// </summary>
         public int Scan_cells_left(int x, int y)
         {
             for (int i = x; i >= 0; i--)
             {
-                if (!Get_cell_is_traversable(i, y))
+                if (!Get_cell_is_traversable(i, y) || !Get_cell_is_traversable(i, y + 1))
                 {
                     return i + 1;
                 }
@@ -200,26 +199,41 @@ namespace Anya_2d
             return 0;
         }
 
-        public int Scan_left(double x, int row)
+        /// <summary>
+        /// Escaneia as células do grid, começando em (x,y) e indo na direção positiva.
+        /// Retorna as coordenadas x da primeira corner atingida, ou do último ponto antes de uma parede de obstáculo atingida.
+        /// </summary>
+        public int Scan_right(double x, int y)
         {
-            int left_of_x = (int)x;
-            if ((x - left_of_x) >= smallest_step && Get_point_is_corner(left_of_x, row))
+            int discrete_x = (int)(x + smallest_step);    
+                                                        
+            for (int i = discrete_x; i < sizeX; i++)
             {
-                return left_of_x;
+                if (Get_cell_is_traversable(i, y) || !Get_cell_is_traversable(i, y + 1))
+                {
+                    return i;
+                }
             }
-            return left_of_x;
+            return discrete_x;
         }
 
-        public int Scan_right(double x, int row)
+        /// <summary>
+        /// Escaneia as células do grid, começando em (x,y) e indo na direção negativa.
+        /// Retorna as coordenadas x da primeira corner atingida, ou do último ponto antes de uma parede de obstáculo atingida.
+        /// </summary>
+        public int Scan_left(double x, int y)
         {
-            int left_of_x = (int)x;
-            if ((x - left_of_x) >= smallest_step && Get_point_is_corner(left_of_x, row))
-            {
-                return left_of_x;
-            }
-            return left_of_x;
-        }
+            int discrete_x = (int)(x + smallest_step);
 
+            for (int i = discrete_x; i >= 0; i--)
+            {
+                if (Get_cell_is_traversable(i, y) || !Get_cell_is_traversable(i, y + 1))
+                {
+                    return i + 1;
+                }
+            }
+            return discrete_x;
+        }
 
         /// <summary>
         /// Retorna a distância Euclideana entre dois pontos no espaço, no formato float.

@@ -3,15 +3,14 @@ using System;
 using System.Collections;
 using UnityEngine;
 
-public class AnyaSearch : MonoBehaviour, IMBRunnable
-{
-    private static int search_id_counter = 0;
+public class AnyaSearch : MonoBehaviour
+{    
     private AnyaExpansionPolicy expander;
     private IHeuristic<Node> heuristic;
+    private FibonacciHeap<Node> open;               // all the yet-to-be-expanded search nodes ordered by f value
+    private Hashtable roots_ = new Hashtable();     // hash table of all visited roots with their best g-values
 
-    //	private Object[] pool;
-    //	private double[] roots;
-    private Hashtable roots_ = new Hashtable();
+
     private SearchNode lastNodeParent;
 
     public bool verbose = false;
@@ -21,23 +20,18 @@ public class AnyaSearch : MonoBehaviour, IMBRunnable
     public int insertions;
     public int generated;
     public int heap_ops;
-    private FibonacciHeap<Node> open;
-
-    // these can be set apriori; only used in conjunction with the
-    // run method.
-    public Node mb_start_;
-    public Node mb_target_;
+ 
+    public Node startNode;
+    public Node targetNode;
     public double mb_cost_;
 
-    public Action<Node> snapshotInsert;
-    public Action<Node> snapshotExpand;
+    private static int search_id_counter = 0;
+
     public AnyaSearch(AnyaExpansionPolicy expander)
     {
-        //		this.pool = new Object[search_space_size];
-        //		this.roots = new double[search_space_size];
-        roots_ = new Hashtable(65535);
-        open = new FibonacciHeap<Node>();
-        heuristic = expander.Heuristic();
+        this.roots_ = new Hashtable(65535);
+        this.open = new FibonacciHeap<Node>();
+        this.heuristic = expander.Heuristic();
         this.expander = expander;
     }
 
@@ -52,17 +46,7 @@ public class AnyaSearch : MonoBehaviour, IMBRunnable
         roots_.Clear();
     }
 
-    /*private void print_path(SearchNode current, java.io.PrintStream stream)
-	{
-		if (current.parent != null)
-		{
-			print_path(current.parent, stream);
-		}
-		stream.println(current.getData().hashCode() + "; "
-				+ current.getData().root.toString()
-				+ "; g=" + current.getSecondaryKey());
-	}*/
-
+  
     private bool PointsEqual(Vector2 p1, Vector2 p2)
     {
         return (int)p1.x == (int)p2.x && (int)p1.y == (int)p2.y;
@@ -98,25 +82,18 @@ public class AnyaSearch : MonoBehaviour, IMBRunnable
         double cost = -1;
         if (!expander.Validate_instance(start, target))
         {
-            return cost;
+            return cost;      // se ou start ou target forem obstáculos retorna -1
         }
 
         SearchNode startNode = Generate(start);
         startNode.ResetNode(search_id_counter);
-        open.Insert(startNode, heuristic.GetValue(start, target), 0);
+        open.Insert(startNode, heuristic.GetValue(start, target), 0);   // insere o nó inicial em open
 
-        while (!open.IsEmpty())
+        while (!open.IsEmpty())                                         // enquanto open não é vazio
         {
-            SearchNode current = (SearchNode)open.RemoveMin();
-            //if(verbose) { System.out.println("expanding (f="+current.getKey()+") "+current.toString()); }
-            /*if (isRecording)
-            {
-                snapshotExpand.Invoke(current.GetData());
-            }*/
-
+            SearchNode current = (SearchNode)open.RemoveMin();          // remove o search node com menor custo de open
             expander.Expand(current.GetData());
-            expanded++;
-            heap_ops++;
+            
             if (current.GetData().interval.Contains(target.root))
             {
                 // found the goal
@@ -179,14 +156,8 @@ public class AnyaSearch : MonoBehaviour, IMBRunnable
                             new_g_value);
                     roots_.Add(root_hash, neighbour);
 
-                    //if(verbose) {System.out.println("\tinserting with f=" + neighbour.getKey() +" (g= "+new_g_value+");" + neighbour.toString());}
-                    if (isRecording)
-                    {
-                        snapshotInsert.Invoke(neighbour.GetData());
-                    }
-
-                    heap_ops++;
-                    insertions++;
+                
+                    
                 }
                 else
                 {
@@ -207,62 +178,9 @@ public class AnyaSearch : MonoBehaviour, IMBRunnable
 
     }
 
-    private SearchNode
-    Generate(Node v)
+    private SearchNode Generate(Node v)
     {
         SearchNode retval = new SearchNode(v, search_id_counter);
-        generated++;
         return retval;
-    }
-
-    public int GetExpanded()
-    {
-        return expanded;
-    }
-
-    public void SetExpanded(int expanded)
-    {
-        this.expanded = expanded;
-    }
-
-    public int GetGenerated()
-    {
-        return insertions;
-    }
-
-    public void SetGenerated(int generated)
-    {
-        insertions = generated;
-    }
-
-    public int GetTouched()
-    {
-        return generated;
-    }
-
-    public void SetTouched(int touched)
-    {
-        generated = touched;
-    }
-
-    public int GetHeap_ops()
-    {
-        return heap_ops;
-    }
-
-    public void SetHeap_ops(int heap_ops)
-    {
-        this.heap_ops = heap_ops;
-    }
-
-    public void Run()
-    {
-        mb_cost_ = Search_costonly(mb_start_, mb_target_);
-    }
-
-    public void CleanUp()
-    {
-        // TODO Auto-generated method stub
-
     }
 }

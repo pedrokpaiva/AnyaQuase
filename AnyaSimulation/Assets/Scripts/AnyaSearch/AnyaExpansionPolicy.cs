@@ -35,7 +35,9 @@ public class AnyaExpansionPolicy : MonoBehaviour, IExpansionPolicy<Node>
         euclidean_ = new EuclideanDistanceHeuristic();
     }
 
-    // need to work with nodes, not vertices and edges
+    /// <summary>
+    /// 
+    /// </summary>
     public void Expand(Node vertex)
     {
         cnode_ = vertex;
@@ -81,15 +83,7 @@ public class AnyaExpansionPolicy : MonoBehaviour, IExpansionPolicy<Node>
         return heuristic_;
     }
 
-    // we require that the cells (s.x, s.y) and (t.x, t.y) are 
-    // non-obstacle locations; i.e. the instances are valid
-    // both for the corner graph that we search and also on
-    // the cell-based graph representation of the grid.
-    // We make this decision to keep compatibility with 
-    // Nathan Sturtevant's benchmarks (http://movingai.com)
-    // i.e. every benchmark problem should be solvable and 
-    // any that isn't should also fail here
-    //@Override
+
     public bool Validate_instance_old(Node start, Node target)
     {
         this.start = start;
@@ -102,7 +96,11 @@ public class AnyaExpansionPolicy : MonoBehaviour, IExpansionPolicy<Node>
         return result;
     }
 
-    // Revised validation to validate cases only based on the corner graph.
+    /// <summary>
+    /// Inicializa as variáveis correspondentes aos nós inicial e final, e retorna verdadeiro caso 
+    /// tanto o nó inicial quanto o destino sejam vivisíveis de algum outro ponto discreto no grid,
+    /// ou seja, se eles não são adjacentes a 4 células bloqueadas.
+    /// </summary>
     public bool Validate_instance(Node start, Node target)
     {
         this.start = start;
@@ -115,18 +113,10 @@ public class AnyaExpansionPolicy : MonoBehaviour, IExpansionPolicy<Node>
         int targetX = (int)target.root.x;
         int targetY = (int)target.root.y;
 
-        bool startResult = grid_.Get_cell_is_traversable(startX, startY) ||
-                            grid_.Get_cell_is_traversable(startX - 1, startY) ||
-                            grid_.Get_cell_is_traversable(startX, startY - 1) ||
-                            grid_.Get_cell_is_traversable(startX - 1, startY - 1);
+        bool startResult = grid_.Get_point_is_visible(startX, startY);
+        bool targetResult = grid_.Get_point_is_visible(targetX, targetY);
 
-        bool targetResult = grid_.Get_cell_is_traversable(targetX, targetY) ||
-                            grid_.Get_cell_is_traversable(targetX - 1, targetY) ||
-                            grid_.Get_cell_is_traversable(targetX, targetY - 1) ||
-                            grid_.Get_cell_is_traversable(targetX - 1, targetY - 1);
-
-        bool result = startResult && targetResult;
-        return result;
+        return startResult && targetResult;
     }
 
     public GridGraph GetGrid() { return grid_; }
@@ -150,30 +140,31 @@ public class AnyaExpansionPolicy : MonoBehaviour, IExpansionPolicy<Node>
         }
     }
 
+
+
+    /// <summary>
+    /// 
+    /// </summary>
     protected void Generate_start_successors(Node node, List<Node> retval)
     {
+        // garante que o nó passado é o inicial mesmo
         Debug.Assert(node.interval.GetLeft() == node.interval.GetRight() &&
-                node.interval.GetLeft() == node.root.x &&
-                node.interval.GetRow() == node.root.y);
-
-
-        // certain successors will be ignored if the start is a double-corner
-        bool start_dc = grid_.Get_point_is_double_corner((int)node.root.x, (int)node.root.y);
-
-        // certain start locations are ambiguous; we don't try to solve these
-        /*if(start_dc && !grid_.get_cell_is_traversable(
-                (int)node.root.x, (int)node.root.y)) 
-        { return;  }*/
+                     node.interval.GetLeft() == node.root.x &&
+                     node.interval.GetRow() == node.root.y);
 
         int rootx = (int)node.root.x;
         int rooty = (int)node.root.y;
 
-        // generate flat observable successors left of the start point
+        // certain successors will be ignored if the start is a double-corner
+        bool startIsDoubleCorner = grid_.Get_point_is_double_corner((int)node.root.x, (int)node.root.y);
+
+        
         // NB: hacky implementation; we use a fake root for the projection
         IntervalProjection projection = new IntervalProjection();
-        if (!start_dc)
+        if (!startIsDoubleCorner)
         {
-            projection.Project(rootx, rootx, rooty, rootx + 1, rooty, grid_);
+            // generate flat observable successors left of the start point
+            projection.Project(rootx, rootx, rooty, rootx + 1, rooty, grid_);  
             Generate_observable_flat__(projection, rootx, rooty, node, retval);
         }
 
@@ -183,9 +174,9 @@ public class AnyaExpansionPolicy : MonoBehaviour, IExpansionPolicy<Node>
         Generate_observable_flat__(projection, rootx, rooty, node, retval);
 
         // generate conical observable successors below the start point 
-        int max_left = grid_.Scan_cells_left(rootx - 1, rooty) + 1;
+        int max_left = grid_.Scan_cells_left(rootx - 1, rooty);
         int max_right = grid_.Scan_cells_right(rootx, rooty);
-        if (max_left != rootx && !start_dc)
+        if (max_left != rootx && !startIsDoubleCorner)
         {
             Split_interval_make_successors(max_left, rootx, rooty + 1,
                     rootx, rooty, rooty + 1, node, retval);
@@ -197,9 +188,9 @@ public class AnyaExpansionPolicy : MonoBehaviour, IExpansionPolicy<Node>
         }
 
         // generate conical observable successors above the start point
-        max_left = grid_.Scan_cells_left(rootx - 1, rooty - 1) + 1;
+        max_left = grid_.Scan_cells_left(rootx - 1, rooty - 1);
         max_right = grid_.Scan_cells_right(rootx, rooty - 1);
-        if (max_left != rootx && !start_dc)
+        if (max_left != rootx && !startIsDoubleCorner)
         {
             Split_interval_make_successors(max_left, rootx, rooty - 1,
                     rootx, rooty, rooty - 2, node, retval);
@@ -393,7 +384,7 @@ public class AnyaExpansionPolicy : MonoBehaviour, IExpansionPolicy<Node>
                     !grid_.Get_cell_is_traversable((int)ileft - 1, projection.type_iii_check_row) &&
                     grid_.Get_cell_is_traversable((int)ileft - 1, projection.check_vis_row))
             {
-                projection.Project_flat(ileft - grid_.smallest_step_div2, ileft, (int)ileft, irow, grid_);
+                projection.Project_flat(ileft - grid_.smallest_step, ileft, (int)ileft, irow, grid_);
                 Generate_observable_flat__(projection, (int)ileft, irow, node, retval);
             }
             // non-observable successors to the right of the current interval
@@ -401,7 +392,7 @@ public class AnyaExpansionPolicy : MonoBehaviour, IExpansionPolicy<Node>
                     !grid_.Get_cell_is_traversable((int)iright, projection.type_iii_check_row) &&
                     grid_.Get_cell_is_traversable((int)iright, projection.check_vis_row))
             {
-                projection.Project_flat(iright, iright + grid_.smallest_step_div2,
+                projection.Project_flat(iright, iright + grid_.smallest_step,
                         (int)iright, irow, grid_); // NB: dummy root
                 Generate_observable_flat__(projection, (int)iright, irow, node, retval);
             }
@@ -450,8 +441,7 @@ public class AnyaExpansionPolicy : MonoBehaviour, IExpansionPolicy<Node>
         Generate_observable_flat__(projection, (int)root.x, (int)root.y, node, retval);
     }
 
-    private void Generate_observable_flat__(IntervalProjection projection,
-        int rootx, int rooty, Node parent, List<Node> retval)
+    private void Generate_observable_flat__(IntervalProjection projection, int rootx, int rooty, Node parent, List<Node> retval)
     {
         Debug.Assert(projection.row == rooty);
         if (!projection.valid) { return; }
