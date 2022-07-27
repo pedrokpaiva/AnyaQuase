@@ -2,7 +2,7 @@ using Anya_2d;
 
 public class SearchNode : FibonacciHeapNode<Node>
 {
-
+    public SearchNode parent;
     /// <summary>
     /// Verifica se o nod ofoi adicionado a lista open
     /// </summary>
@@ -18,19 +18,18 @@ public class SearchNode : FibonacciHeapNode<Node>
     /// </summary>
     /// <param name="vertex"></param>
     /// <param name="search_id_counter"></param>
-    public SearchNode(Node vertex, int search_id_counter) : base(vertex)
+    public SearchNode(Node node, int search_id_counter) : base(node)
     {
-        data = vertex;
         ResetNode(search_id_counter);
         search_id = -1;
     }
 
     public void ResetNode(int search_id_counter)
     {
-        base.ResetNode();
+        parent = null;
         search_id = search_id_counter;
         closed = false;
-
+        base.ResetNode();
     }
 
     /// <summary>
