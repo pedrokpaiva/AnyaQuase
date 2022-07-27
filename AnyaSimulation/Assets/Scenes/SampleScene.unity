@@ -594,7 +594,7 @@ MonoBehaviour:
     m_Bits: 64
   numNodesXGrid: 60
   numNodesYGrid: 60
-  nodeDiameter: 1
+  distanceNodes: 2
 --- !u!1 &601400898
 GameObject:
   m_ObjectHideFlags: 0

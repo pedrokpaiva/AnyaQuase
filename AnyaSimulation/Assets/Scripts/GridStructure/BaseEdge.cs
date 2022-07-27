@@ -1,5 +1,8 @@
 ﻿namespace Anya_2d
 {
+    /// <summary>
+    /// Uma aresta do grid
+    /// </summary>
     public abstract class BaseEdge
     {
         public long id = -1;

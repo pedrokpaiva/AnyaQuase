@@ -7,13 +7,13 @@ public class Anya
     private static AnyaSearch anya = null;
     protected GridGraph storedGraph;
     private Path<Node> pathStartNode = null;
-    
-    protected int[] parent; 
-    
+
+    protected int[] parent;
+
     protected int sizeX;         // dimensões do gridgraph
     protected int sizeY;
     protected int sizeXplusOne;
-    
+
     protected int startX;        // coordenadas x e y do ponto inicial e destino da busca
     protected int startY;
     protected int targetX;
@@ -22,16 +22,16 @@ public class Anya
 
     public Anya(GridGraph graph, int sizeX, int sizeY, int indexSX, int indexSY, int indexTX, int indexTY)
     {
-        this.storedGraph = graph;
+        storedGraph = graph;
         this.sizeX = sizeX;
-        this.sizeXplusOne = sizeX + 1;
+        sizeXplusOne = sizeX + 1;
         this.sizeY = sizeY;
-        this.startX = indexSX;
-        this.startY = indexSY;
-        this.targetX = indexTX;
-        this.targetY = indexTY;
+        startX = indexSX;
+        startY = indexSY;
+        targetX = indexTX;
+        targetY = indexTY;
 
-        Initialise(graph, indexSX, indexSY, indexTX, indexTY);  
+        Initialise(graph, indexSX, indexSY, indexTX, indexTY);
     }
 
 
@@ -50,13 +50,13 @@ public class Anya
             start.interval.Init(indexSX, indexSX, indexSY);
             target.root.Set(indexTX, indexTY);
             target.interval.Init(indexTX, indexTX, indexTY);
-            
+
             anya.startNode = start;
             anya.targetNode = target;
         }
         catch (Exception e)
         {
-            Console.WriteLine(e.Message); 
+            Console.WriteLine(e.Message);
         }
     }
 
@@ -66,8 +66,9 @@ public class Anya
     /// </summary>
     public void ComputePath()
     {
-        pathStartNode = anya.Search(anya.startNode, anya.targetNode);   
-    }                                                                   
+        Debug.Log(anya.startNode.ToString() + ", " + anya.targetNode.ToString());
+        pathStartNode = anya.Search(anya.startNode, anya.targetNode);
+    }
 
     /// <summary>
     /// Retorna uma matriz com os pontos do caminho computado.
@@ -76,11 +77,11 @@ public class Anya
     /// </summary>
     public int[][] GetPath()
     {
-        int length = 0;                          
+        int length = 0;
         Path<Node> current = pathStartNode;
         while (current != null)
-        { 
-            current = current.GetNext();          
+        {
+            current = current.GetNext();
             ++length;                            // conta quantos nós tem no caminho
         }
         int[][] path = new int[length][];        // inicializa as linhas da matriz com o número de nós do caminho
