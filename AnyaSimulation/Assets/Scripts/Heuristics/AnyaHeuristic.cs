@@ -3,6 +3,9 @@ using System.Diagnostics;
 
 namespace Anya_2d
 {
+    /// <summary>
+    /// Heuristica do Anya+
+    /// </summary>
     public class AnyaHeuristic : IHeuristic<Node>
     {
         private EuclideanDistanceHeuristic h;
@@ -21,51 +24,54 @@ namespace Anya_2d
         {
             Debug.Assert((t.root.y == t.interval.GetRow()) &&
                     (t.root.x == t.interval.GetLeft()) &&
-                    (t.root.x == t.interval.GetRight()));
+                    (t.root.x == t.interval.GetRight())); ///Garante que o nodo target é apenas um ponto
 
+            double rootx = n.root.x;
+            double rooty = n.root.y;
             int irow = n.interval.GetRow();
             double ileft = n.interval.GetLeft();
             double iright = n.interval.GetRight();
+
             double targetx = t.root.x;
             double targety = t.root.y;
-            double rootx = n.root.x;
-            double rooty = n.root.y;
 
-            // root and target must be on opposite sides of the interval
-            // (or both on the same row as the interval). we mirror the
-            // target through the interval if this is not the case
-            if ((rooty < irow && targety < irow))
+
+
+            //É necessário garantir que interval esteja entre root e target
+            if ((rooty < irow && targety < irow)) //caso target E root estiverem ambos acima do intervalo
             {
-                targety += 2 * (irow - targety);
+                targety += 2 * (irow - targety); //posição de target é espelhada para outro lado do intervalo
 
             }
-            else if (rooty > irow && targety > irow)
+            else if (rooty > irow && targety > irow) //caso target E root estiverem ambos abaixo do intervalo
             {
-                targety -= 2 * (targety - irow);
+                targety -= 2 * (targety - irow); //posição de target é espelhada para outro lado do intervalo
             }
 
-            // project the interval endpoints onto the target row
-            double rise_root_to_irow = Math.Abs(n.root.y - n.interval.GetRow());
-            double rise_irow_to_target = Math.Abs(n.interval.GetRow() - t.root.y);
-            double lrun = n.root.x - n.interval.GetLeft();
-            double rrun = n.interval.GetRight() - n.root.x;
-            double left_proj = n.interval.GetLeft() - rise_irow_to_target * (lrun / rise_root_to_irow);
-            double right_proj = n.interval.GetRight() + rise_irow_to_target * (rrun / rise_root_to_irow);
+            //projeta os extremos do intervalo para a coluna do target como se fosse um triângulo
+            //setup
+            double rise_root_to_irow = Math.Abs(rooty - irow); //distancia root -> interval (eixo y)
+            double rise_irow_to_target = Math.Abs(irow - targety); //distancia target -> interval (eixo y)
+            double lrun = rootx - ileft; //distancia root -> esquerda do interval (eixo x)
+            double rrun = iright - rootx;//distancia direita do interval -> root (eixo x)
+                                         //exec
+            double left_proj = ileft - lrun * (rise_irow_to_target / rise_root_to_irow);//esquerda projetada
+            double right_proj = iright + rrun * (rise_irow_to_target / rise_root_to_irow);//direita projetada
 
-            if ((t.root.x + GridGraph.epsilon) < left_proj)
+            if ((t.root.x + GridGraph.epsilon) < left_proj)// caso rootx menor que proj_left
             {
-                return // pass through the left endpoint
-                        h.H(rootx, rooty, ileft, irow) +
-                        h.H(ileft, irow, targetx, targety);
+                return // a distancia vai passar pelo extremo esquerdo do intervalo (pois gostaria de ser
+                       // ainda mais a esquerda)
+                        h.H(rootx, rooty, ileft, irow) + h.H(ileft, irow, targetx, targety);
             }
-            if (t.root.x > (right_proj + GridGraph.epsilon))
+            if (t.root.x > (right_proj + GridGraph.epsilon))// caso rootx maior que proj_right
             {
-                return // pass through the right endpoint
-                        h.H(rootx, rooty, iright, irow) +
-                        h.H(iright, irow, targetx, targety);
+                return // a distancia vai passar pelo extremo direito do intervalo (pois gostaria de ser
+                       // ainda mais a direita)
+                        h.H(rootx, rooty, iright, irow) + h.H(iright, irow, targetx, targety);
             }
 
-            //representative point is interior to the interval
+            // a distancia vai passar por algum ponto dentro do intervalo
             return h.H(rootx, rooty, targetx, targety);
         }
     }

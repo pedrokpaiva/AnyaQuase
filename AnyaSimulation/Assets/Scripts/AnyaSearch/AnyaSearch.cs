@@ -65,7 +65,7 @@ public class AnyaSearch
 
             while (node != null)
             {
-                if (!PointsEqual(path.GetVertex().root, node.GetData().root))
+                if (!PointsEqual(path.GetNode().root, node.GetData().root))
                 {
                     path = new Path<Node>(node.GetData(), path, node.GetSecondaryKey());
                 }
