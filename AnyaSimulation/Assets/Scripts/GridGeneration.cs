@@ -12,12 +12,15 @@ public class GridGeneration : MonoBehaviour
 
     private void Awake()
     {
+        Debug.Log("Rodando");
         CreateGrid();
+
         // start node = (0, 0) ; target node = (numNodesXGrid, numNodesYGrid)
-        Anya pathFinding = new Anya(grid, numNodesXGrid, numNodesYGrid, 0, 0, numNodesXGrid, numNodesYGrid);
+        Anya pathFinding = new Anya(grid, numNodesXGrid, numNodesYGrid, 1, 1, 3, 3);
         pathFinding.ComputePath();
-        printa_path(pathFinding.GetPath());
-        ;
+        Debug.Log("banana");
+        Printa_path(pathFinding.GetPath());
+        Debug.Log("pronto");
     }
 
     /// <summary>
@@ -70,11 +73,11 @@ public class GridGeneration : MonoBehaviour
     /// <summary>
     /// Printa um caminho.
     /// </summary>
-    private void printa_path(int[][] path)
+    private void Printa_path(int[][] path)
     {
         int dimensaoX = path.GetLength(0);
-
-        for (int x = 0; x < dimensaoX; x++)
+        Debug.Log(dimensaoX.ToString());
+        for (int x = 0; x < 1; x++)
         {
             Debug.Log("(" + path[x][0] + ", " + path[x][1] + ") ");
         }

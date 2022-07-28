@@ -1,6 +1,4 @@
-using UnityEngine;
-
-public class FibonacciHeapNode<T> : MonoBehaviour
+public class FibonacciHeapNode<T>
 {
     /**
     * Node data.

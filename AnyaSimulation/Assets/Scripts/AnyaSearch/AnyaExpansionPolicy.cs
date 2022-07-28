@@ -24,6 +24,9 @@ public class AnyaExpansionPolicy : IExpansionPolicy<Node>
     public AnyaExpansionPolicy(GridGraph grid)
     {
         grid_ = grid;
+        successors_ = new List<Node>(32);
+        heuristic_ = new AnyaHeuristic();
+        euclidean_ = new EuclideanDistanceHeuristic();
     }
 
     public AnyaExpansionPolicy(GridGraph grid, bool prune)

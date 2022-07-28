@@ -34,13 +34,6 @@
         /// <summary>
         /// A heuristic for evaluating cost-to-go
         /// </summary>
-        IHeuristic<V> Heuristic();
-
-        /// <summary>
-        /// Sometimes it is desirable for the expander to compute a hash
-        /// value for each node it generates (cf. the node computing its own
-        /// hash value).
-        /// </summary>
         int GetHashCode(V v);
     }
 }

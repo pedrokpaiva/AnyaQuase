@@ -5,7 +5,7 @@ public class FibonacciHeap<T>
 {
     //~ Static fields/initializers ---------------------------------------------
 
-    private static double oneOverLogPhi =
+    public static double oneOverLogPhi =
         1.0 / Math.Log((1.0 + Math.Sqrt(5.0)) / 2.0);
 
     //~ Instance fields --------------------------------------------------------
@@ -13,12 +13,12 @@ public class FibonacciHeap<T>
     /**
      * Points to the minimum node in the heap.
      */
-    private FibonacciHeapNode<T> minNode;
+    public FibonacciHeapNode<T> minNode;
 
     /**
      * Number of nodes in the heap.
      */
-    private int nNodes;
+    public int nNodes;
 
     //~ Constructors -----------------------------------------------------------
 
@@ -41,7 +41,7 @@ public class FibonacciHeap<T>
      */
     public bool IsEmpty()
     {
-        return minNode == null;
+        return nNodes == 0;
     }
 
     // isEmpty
@@ -204,7 +204,7 @@ public class FibonacciHeap<T>
     {
         FibonacciHeapNode<T> z = minNode;
 
-        if (z != null)
+        if (nNodes > 0)
         {
             int numKids = z.degree;
             FibonacciHeapNode<T> x = z.child;

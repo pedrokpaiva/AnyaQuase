@@ -3,13 +3,13 @@
     public class Path<V>
     {
         private readonly double pathCost;
-        private readonly V vertex;
+        private readonly V node;
         private readonly Path<V> next;
         private Path<V> prev;
 
-        public Path(V vertex, Path<V> next, double pathCost)
+        public Path(V node, Path<V> next, double pathCost)
         {
-            this.vertex = vertex;
+            this.node = node;
             this.pathCost = pathCost;
             this.next = next;
             if (next != null)
@@ -18,7 +18,7 @@
             }
         }
 
-        public double getPathCost()
+        public double GetPathCost()
         {
             return pathCost;
         }
@@ -30,9 +30,9 @@
         {
             return prev;
         }
-        public V GetVertex()
+        public V GetNode()
         {
-            return vertex;
+            return node;
         }
     }
 }
