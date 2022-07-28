@@ -165,14 +165,15 @@ namespace Anya_2d
 
         /// <summary>
         /// Escaneia as células do grid, começando em (x,y) e indo na direção positiva.
-        /// Retorna as coordenadas x do primeiro ponto de um obstáculo atingido.
+        //// Retorna as coordenadas x do primeiro ponto de um obstáculo atingido, na linha atual
+        /// ou na linha de cima.
         /// Se nenhum obstáculo foi atingido, retorna o índice do último ponto da linha.
         /// </summary>
         public int Scan_cells_right(int x, int y)
         {
             for (int i = x; i < sizeX; i++)
             {
-                if (!Get_cell_is_traversable(i, y))
+                if (!Get_cell_is_traversable(i, y) || !Get_cell_is_traversable(i, y + 1))
                 {
                     return i;
                 }
@@ -182,15 +183,15 @@ namespace Anya_2d
 
         /// <summary>
         /// Escaneia as células do grid, começando em (x,y) e indo na direção negativa.
-        /// Retorna as coordenadas x do primeiro ponto de um obstáculo atingido.
+        ///  /// Retorna as coordenadas x do primeiro ponto de um obstáculo atingido, na linha atual
+        /// ou na linha de cima.
         /// Se nenhum obstáculo foi atingido, retorna o índice do primeiro ponto da linha.
-        /// OBS: LEMBRAR DE MUDAR NAS CHAMADAS DESSA FUNÇÃO QUE NÃO É MAIS PRA SOMAR 1, JA A SOMA DE 1 EMBUTIDA NA FUNÇÃO
         /// </summary>
         public int Scan_cells_left(int x, int y)
         {
             for (int i = x; i >= 0; i--)
             {
-                if (!Get_cell_is_traversable(i, y))
+                if (!Get_cell_is_traversable(i, y) || !Get_cell_is_traversable(i, y + 1))
                 {
                     return i + 1;
                 }
