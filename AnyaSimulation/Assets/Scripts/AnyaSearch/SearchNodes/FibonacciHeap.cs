@@ -3,13 +3,13 @@ using System.Collections.Generic;
 
 public class FibonacciHeap<T>
 {
-    //~ Static fields/initializers ---------------------------------------------
 
     public static double oneOverLogPhi =
         1.0 / Math.Log((1.0 + Math.Sqrt(5.0)) / 2.0);
 
     //~ Instance fields --------------------------------------------------------
 
+<<<<<<< HEAD
     /**
      * Points to the minimum node in the heap.
      */
@@ -19,63 +19,60 @@ public class FibonacciHeap<T>
      * Number of nodes in the heap.
      */
     public int nNodes;
+=======
+    /// <summary>
+    /// O nodo de menor valor do Heap
+    /// </summary>
+    private FibonacciHeapNode<T> minNode;
+
+    /// <summary>
+    /// Número de nodos no Heap
+    /// </summary>
+    private int nNodes;
+>>>>>>> 74655071d545d51f763dfc0be900942a3e77e066
 
     //~ Constructors -----------------------------------------------------------
 
-    /**
-     * Constructs a FibonacciHeap object that contains no elements.
-     */
+    /// <summary>
+    /// Cria  um Heap vazio
+    /// </summary>
     public FibonacciHeap()
     {
-    } // FibonacciHeap
+    }
 
     //~ Methods ----------------------------------------------------------------
 
-    /**
-     * Tests if the Fibonacci heap is empty or not. Returns true if the heap is
-     * empty, false otherwise.
-     *
-     * <p>Running time: O(1) actual</p>
-     *
-     * @return true if the heap is empty, false otherwise
-     */
+    /// <summary>
+    /// Verifica se o Heap está vazio
+    /// </summary>
+    /// <returns>true se vazio, false caso contrário</returns>
     public bool IsEmpty()
     {
         return nNodes == 0;
     }
 
-    // isEmpty
-
-    /**
-     * Removes all elements from this heap.
-     */
+    /// <summary>
+    /// Remove todos os nodos do Heap
+    /// </summary>
     public void Clear()
     {
         minNode = null;
         nNodes = 0;
     }
 
-    // clear
-
-    /**
-     * Decreases the key value for a heap node, given the new value to take on.
-     * The structure of the heap may be changed and will not be consolidated.
-     *
-     * <p>Running time: O(1) amortized</p>
-     *
-     * @param x node to decrease the key of
-     * @param k new key value for node x
-     *
-     * @exception IllegalArgumentException Thrown if k is larger than x.key
-     * value.
-     */
+    /// <summary>
+    /// Diminui o valor da key de um nodo do Heap
+    /// </summary>
+    /// <param name="x"> nodo cuja key será reduzida</param>
+    /// <param name="k"> novo valor da key do nodo x</param>
+    /// <exception cref="ArgumentException">Lançada caso a nova key seja maior que a antiga</exception>
     public void DecreaseKey(FibonacciHeapNode<T> x, double k)
     {
         long tmp_k = (long)(k * FibonacciHeapNode<T>.BIG_ONE + 0.5);
         long tmp_x = (long)(x.key * FibonacciHeapNode<T>.BIG_ONE + 0.5);
         if (tmp_k > tmp_x)
         {
-            throw new Exception(
+            throw new ArgumentException(
                 "decreaseKey() got larger key value");
         }
 
@@ -95,29 +92,23 @@ public class FibonacciHeap<T>
         }
     }
 
-    // Update the priority of a heap element using as its priority
-    // @parameter key and then @parameter secondaryKey.
-    // (i.e. secondaryKey used for tie-breaking)
-    // @created: 2014-10-07
-    // @author: dharabor
+    /// <summary>
+    /// Diminui o valor da key de um nodo do Heap,
+    /// adiciona também uma key secunária para desempate
+    /// </summary>
+    /// <param name="x"></param>
+    /// <param name="newKey"></param>
+    /// <param name="newSecondaryKey"> key utilizada ara desempate</param>
     public void DecreaseKey(FibonacciHeapNode<T> x, double newKey, double newSecondaryKey)
     {
         x.secondaryKey = newSecondaryKey;
         DecreaseKey(x, newKey);
     }
 
-    // decreaseKey
-
-    /**
-     * Deletes a node from the heap given the reference to the node. The trees
-     * in the heap will be consolidated, if necessary. This operation may fail
-     * to remove the correct element if there are nodes with key value
-     * -Infinity.
-     *
-     * <p>Running time: O(log n) amortized</p>
-     *
-     * @param x node to remove from heap
-     */
+    /// <summary>
+    /// Remove um nodo do Heap
+    /// </summary>
+    /// <param name="x">Nodo a ser removido</param>
     public void Delete(FibonacciHeapNode<T> x)
     {
         // make x as small as possible
@@ -127,18 +118,12 @@ public class FibonacciHeap<T>
         RemoveMin();
     }
 
-    // delete
 
-    /**
-     * Inserts a new data element into the heap. No heap consolidation is
-     * performed at this time, the new node is simply inserted into the root
-     * list of this heap.
-     *
-     * <p>Running time: O(1) actual</p>
-     *
-     * @param node new node to insert into heap
-     * @param key key value associated with data object
-     */
+    /// <summary>
+    /// Insere um Nodo no Heap
+    /// </summary>
+    /// <param name="node">Nodo a ser inserido</param>
+    /// <param name="key">key do nodo</param>
     public void Insert(FibonacciHeapNode<T> node, double key)
     {
         node.key = key;
@@ -160,31 +145,26 @@ public class FibonacciHeap<T>
         {
             minNode = node;
         }
-
         nNodes++;
     }
 
-    // Insert a new element into the heap with a priority based on 
-    // @parameter key and then @parameter secondaryKey
-    // (i.e. secondaryKey used for tie-breaking)
-    // @created: 2014-10-07
-    // @author: dharabor
+    /// <summary>
+    ///  Insere um nodo no Heap,
+    ///  adiciona uma key secundária para desempate
+    /// </summary>
+    /// <param name="node"></param>
+    /// <param name="key"></param>
+    /// <param name="secondaryKey">key para desempate</param>
     public void Insert(FibonacciHeapNode<T> node, double key, double secondaryKey)
     {
         node.secondaryKey = secondaryKey;
         Insert(node, key);
     }
 
-    // insert
-
-    /**
-     * Returns the smallest element in the heap. This smallest element is the
-     * one with the minimum key value.
-     *
-     * <p>Running time: O(1) actual</p>
-     *
-     * @return heap node with the smallest key
-     */
+    /// <summary>
+    /// Retorna o menor nodo do Heap, o que tem a menor key
+    /// </summary>
+    /// <returns></returns>
     public FibonacciHeapNode<T> Min()
     {
         return minNode;
@@ -192,14 +172,10 @@ public class FibonacciHeap<T>
 
     // min
 
-    /**
-     * Removes the smallest element from the heap. This will cause the trees in
-     * the heap to be consolidated, if necessary.
-     *
-     * <p>Running time: O(log n) amortized</p>
-     *
-     * @return node with the smallest key
-     */
+    /// <summary>
+    /// Remove o menor nodo do Heap
+    /// </summary>
+    /// <returns></returns>
     public FibonacciHeapNode<T> RemoveMin()
     {
         FibonacciHeapNode<T> z = minNode;
@@ -252,16 +228,10 @@ public class FibonacciHeap<T>
         return z;
     }
 
-    // removeMin
-
-    /**
-     * Returns the size of the heap which is measured in the number of elements
-     * contained in the heap.
-     *
-     * <p>Running time: O(1) actual</p>
-     *
-     * @return number of elements in the heap
-     */
+    /// <summary>
+    /// Retorna o número de nodos do Heap
+    /// </summary>
+    /// <returns></returns>
     public int Size()
     {
         return nNodes;
@@ -269,17 +239,12 @@ public class FibonacciHeap<T>
 
     // size
 
-    /**
-     * Joins two Fibonacci heaps into a new one. No heap consolidation is
-     * performed at this time. The two root lists are simply joined together.
-     *
-     * <p>Running time: O(1) actual</p>
-     *
-     * @param h1 first heap
-     * @param h2 second heap
-     *
-     * @return new heap containing h1 and h2
-     */
+    /// <summary>
+    /// Junta dois Heaps, não realiza ajuste
+    /// </summary>
+    /// <param name="h1"></param>
+    /// <param name="h2"></param>
+    /// <returns></returns>
     public static FibonacciHeap<T> Union(FibonacciHeap<T> h1, FibonacciHeap<T> h2)
     {
         FibonacciHeap<T> h = new FibonacciHeap<T>();
@@ -314,7 +279,6 @@ public class FibonacciHeap<T>
         return h;
     }
 
-    // union
 
     /**
      * Creates a String representation of this Fibonacci heap.
@@ -369,16 +333,10 @@ public class FibonacciHeap<T>
         return buf.toString();
     }*/
 
-    // toString
-
-    /**
-     * Performs a cascading cut operation. This cuts y from its parent and then
-     * does the same for its parent, and so on up the tree.
-     *
-     * <p>Running time: O(log n); O(1) excluding the recursion</p>
-     *
-     * @param y node to perform cascading cut on
-     */
+    /// <summary>
+    /// Corta y de seu pai e o mesmo para o pai deste, recursivamente
+    /// </summary>
+    /// <param name="y"></param>
     protected void CascadingCut(FibonacciHeapNode<T> y)
     {
         FibonacciHeapNode<T> z = y.parent;
@@ -402,8 +360,9 @@ public class FibonacciHeap<T>
         }
     }
 
-    // cascadingCut
-
+    /// <summary>
+    /// Organiza o array paramanter sua estrutura
+    /// </summary>
     protected void Consolidate()
     {
         int arraySize =
@@ -514,17 +473,11 @@ public class FibonacciHeap<T>
 
     }
 
-    // consolidate
-
-    /**
-     * The reverse of the link operation: removes x from the child list of y.
-     * This method assumes that min is non-null.
-     *
-     * <p>Running time: O(1)</p>
-     *
-     * @param x child of y to be removed from y's child list
-     * @param y parent of x about to lose a child
-     */
+    /// <summary>
+    /// Remove x da lista de filhos de y
+    /// </summary>
+    /// <param name="x">Nodo filho que será removido</param>
+    /// <param name="y">Nodo pai que terá seu filho removido</param>
     protected void Cut(FibonacciHeapNode<T> x, FibonacciHeapNode<T> y)
     {
         // remove x from childlist of y and decrement degree[y]
@@ -556,16 +509,11 @@ public class FibonacciHeap<T>
         x.mark = false;
     }
 
-    // cut
-
-    /**
-     * Make node y a child of node x.
-     *
-     * <p>Running time: O(1) actual</p>
-     *
-     * @param y node to become child
-     * @param x node to become parent
-     */
+    /// <summary>
+    /// Insere y como filho de x
+    /// </summary>
+    /// <param name="y">Nodo que será filho</param>
+    /// <param name="x">Nodo qu eserá pai</param>
     protected void Link(FibonacciHeapNode<T> y, FibonacciHeapNode<T> x)
     {
         // remove y from root list of heap
@@ -596,6 +544,5 @@ public class FibonacciHeap<T>
         y.mark = false;
     }
 
-    // link
 }
 

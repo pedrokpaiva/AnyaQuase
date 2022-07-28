@@ -3,37 +3,52 @@
     public interface IExpansionPolicy<V>
     {
         /// <summary>
-        /// return true if the start and target are valid location
-        /// and false otherwise. this method is intended to be invoked
-        /// once; at the commencement of search.
+        /// Verifica se os nodos inicial e final sestão em posições válidas
         /// </summary>
+        /// <param name="start"></param>
+        /// <param name="target"></param>
+        /// <returns>true se ambos os nodos estãp em posições válidas</returns>
         public bool Validate_instance(V start, V target);
 
         /// <summary>
-        /// generate all the immediate neighbours of a node 
+        /// Gera todos os vizinhos imediatos de um nodo
         /// </summary>
-        public void Expand(V vertex);
+        /// <param name="vertex"></param>
+        public void Expand(V node);
+
         /// <summary>
-        /// return the next neighbour of the node currently being
-        /// expanded; and null if there are no neighbours or if all
-        /// neighbours have been exhausted
+        /// Retorna o próximo vizinho do nodo sendo expandido
         /// </summary>
+        /// <returns></returns>
         public V Next();
 
         /// <summary>
-        /// return true until all neighbours have been iterated over
+        /// 
         /// </summary>
+        /// <returns>true se ainda há vizinhos a serem iterados</returns>
         public bool HasNext();
 
         /// <summary>
-        /// return the distance (g-value) from the node being expanded
-        /// to the current neighbour
+        /// 
         /// </summary>
+        /// <returns>Retorna a distância (g-value) do nodo sendo expandido
+        /// até o vizinho atual</returns>
         public double Step_cost();
 
         /// <summary>
-        /// A heuristic for evaluating cost-to-go
+        /// Heuristica utilizada para determinar o custo
         /// </summary>
+<<<<<<< HEAD
+=======
+        /// <returns></returns>
+        IHeuristic<V> Heuristic();
+
+        /// <summary>
+        /// Gera um código Hash do nodo sendo expandido
+        /// </summary>
+        /// <param name="v"></param>
+        /// <returns></returns>
+>>>>>>> 74655071d545d51f763dfc0be900942a3e77e066
         int GetHashCode(V v);
     }
 }

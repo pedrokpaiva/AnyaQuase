@@ -1,63 +1,70 @@
+<<<<<<< HEAD
 public class FibonacciHeapNode<T>
+=======
+using UnityEngine;
+
+/// <summary>
+/// Nodo de um Heap
+/// </summary>
+/// <typeparam name="T"></typeparam>
+public class FibonacciHeapNode<T> : MonoBehaviour
+>>>>>>> 74655071d545d51f763dfc0be900942a3e77e066
 {
-    /**
-    * Node data.
-    */
+    /// <summary>
+    /// Dados do nodo
+    /// </summary>
     public T data;
 
-    /**
-     * first child node
-     */
+    /// <summary>
+    /// Primeiro filho
+    /// </summary>
     public FibonacciHeapNode<T> child;
 
-    /**
-     * left sibling node
-     */
+    /// <summary>
+    /// Nodo a esquerda
+    /// </summary>
     public FibonacciHeapNode<T> left;
 
-    /**
-     * parent node
-     */
+    /// <summary>
+    /// Nodo pai
+    /// </summary>
     public FibonacciHeapNode<T> parent;
 
-    /**
-     * right sibling node
-     */
+    /// <summary>
+    /// Nodo a direita
+    /// </summary>
     public FibonacciHeapNode<T> right;
 
-    /**
-     * true if this node has had a child removed since this node was added to
-     * its parent
-     */
+    /// <summary>
+    /// True se esse nodo teve um filho removido desde sua inserção ao seu pai
+    /// </summary>
     public bool mark;
 
-    /**
-     * key value for this node
-     */
     public double key;
     public double secondaryKey;
     public static long BIG_ONE = 100000;
     public static double epsilon = 1 / BIG_ONE;
 
-    /**
-     * number of children of this node (does not count grandchildren)
-     */
+    /// <summary>
+    /// Número de filhos do nodo, apenas filhos diretos
+    /// </summary>
     public int degree;
 
     //~ Constructors -----------------------------------------------------------
 
-    /**
-     * Default constructor. Initializes the right and left pointers, making this
-     * a circular doubly-linked list.
-     *
-     * @param data data for this node
-     */
+    /// <summary>
+    /// Cria um Nodo a partir de seus dados
+    /// </summary>
+    /// <param name="data"></param>
     public FibonacciHeapNode(T data)
     {
         this.data = data;
         ResetNode();
     }
 
+    /// <summary>
+    /// Inicializa um nodo e o torna double-linked circularmente
+    /// </summary>
     protected void ResetNode()
     {
         parent = null;
@@ -72,50 +79,57 @@ public class FibonacciHeapNode<T>
 
     //~ Methods ----------------------------------------------------------------
 
-    /**
-     * Obtain the key for this node.
-     *
-     * @return the key
-     */
+    /// <summary>
+    /// Getter de key
+    /// </summary>
+    /// <returns>key</returns>
     public double GetKey()
     {
         return key;
     }
 
+    /// <summary>
+    /// Getter de secondaryKey
+    /// </summary>
+    /// <returns>key secundária</returns>
     public double GetSecondaryKey()
     {
         return secondaryKey;
     }
 
-    /**
-     * Obtain the data for this node.
-     */
+    /// <summary>
+    /// Getter de data
+    /// </summary>
+    /// <returns>dados do nodo</returns>
     public T GetData()
     {
         return data;
     }
 
-    /**
-     * Return the string representation of this object.
-     *
-     * @return string representing this object
-     */
+    /// <summary>
+    /// Transforma o nodo em uma string
+    /// </summary>
+    /// <returns></returns>
     public override string ToString()
     {
         return key.ToString();
     }
 
-    /*
-     * @return true if this node has a lower priority
-     * than @parameter other
-     */
+    /// <summary>
+    /// Compara dois nodos
+    /// </summary>
+    /// <param name="other"></param>
+    /// <returns>true se possui menos prioridade que other</returns>
     public bool LessThan(FibonacciHeapNode<T> other)
     {
         return FibonacciHeapNode<T>.LessThan(
                 key, secondaryKey,
                 other.key, other.secondaryKey);
     }
-
+    /// <summary>
+    /// Compara as keys (primárias e secundárias) de dois nodos
+    /// </summary>
+    /// <returns>true se key menor que otherKey ou , caso iguais, secKey maior que otherSecKey </returns>
     public static bool LessThan(double pk_a, double sk_a,
             double pk_b, double sk_b)
     {
