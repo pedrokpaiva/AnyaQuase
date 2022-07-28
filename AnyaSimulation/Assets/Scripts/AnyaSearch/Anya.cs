@@ -90,7 +90,7 @@ public class Anya
         int i = 0;
         while (current != null)
         {
-            Vector2 point = current.GetVertex().root;
+            Vector2 point = current.GetNode().root;
             path[i] = new int[] { (int)point.x, (int)point.y };  // seta as colunas com as coordenadas do ponto da linha correspondente,
             current = current.GetNext();                         // de acordo com a ordem no trajeto
             ++i;
