@@ -241,20 +241,18 @@ namespace Anya_2d
                 }
 
                 left = max_left = iright;           //nova esquerda é a antiga direita
-                right = max_right = grid.Scan_cells_right((int)left, check_vis_row);    //nova direita é
+                right = max_right = grid.Scan_cells_right((int)left, check_vis_row);    //nova direita é o ponto mais a direita possiv
             }
-            else
+            else //Memsa logica que o anterior, mas procurando projetar para a esquerda
             { // look to the left for successors
                 Debug.Assert(rootx >= iright);
-                bool can_step =
+                bool can_step =                             //verifica se podemos dobrar no ponto mais a esquerda
                         grid.Get_cell_is_traversable((int)ileft - 1, irow) &&
                         grid.Get_cell_is_traversable((int)ileft - 1, irow - 1);
                 if (!can_step) { valid = false; observable = false; return; }
 
-                // if the tiles below are free, we must be going up
-                // else we round the corner and go down		
-                if (!grid.Get_cell_is_traversable((int)ileft, irow))
-                {   // going down
+                if (!grid.Get_cell_is_traversable((int)ileft, irow)) //se temos um obstáculo acima
+                {                                                       // vamos pra baixo
                     check_vis_row = irow;
                     sterile_check_row = row = irow + 1;
                 }
@@ -271,6 +269,10 @@ namespace Anya_2d
             observable = false;
         }
 
+        /// <summary>
+        /// Getter  de valid
+        /// </summary>
+        /// <returns>valid</returns>
         public bool GetValid() { return valid; }
     }
 }
