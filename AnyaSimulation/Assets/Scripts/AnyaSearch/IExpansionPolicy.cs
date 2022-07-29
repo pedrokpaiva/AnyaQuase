@@ -38,8 +38,6 @@
         /// <summary>
         /// Heuristica utilizada para determinar o custo
         /// </summary>
-<<<<<<< HEAD
-=======
         /// <returns></returns>
         IHeuristic<V> Heuristic();
 
@@ -48,7 +46,6 @@
         /// </summary>
         /// <param name="v"></param>
         /// <returns></returns>
->>>>>>> 74655071d545d51f763dfc0be900942a3e77e066
         int GetHashCode(V v);
     }
 }

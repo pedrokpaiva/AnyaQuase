@@ -1,14 +1,8 @@
-<<<<<<< HEAD
-public class FibonacciHeapNode<T>
-=======
-using UnityEngine;
-
 /// <summary>
 /// Nodo de um Heap
 /// </summary>
 /// <typeparam name="T"></typeparam>
-public class FibonacciHeapNode<T> : MonoBehaviour
->>>>>>> 74655071d545d51f763dfc0be900942a3e77e066
+public class FibonacciHeapNode<T>
 {
     /// <summary>
     /// Dados do nodo

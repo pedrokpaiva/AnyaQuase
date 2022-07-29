@@ -9,17 +9,6 @@ public class FibonacciHeap<T>
 
     //~ Instance fields --------------------------------------------------------
 
-<<<<<<< HEAD
-    /**
-     * Points to the minimum node in the heap.
-     */
-    public FibonacciHeapNode<T> minNode;
-
-    /**
-     * Number of nodes in the heap.
-     */
-    public int nNodes;
-=======
     /// <summary>
     /// O nodo de menor valor do Heap
     /// </summary>
@@ -29,7 +18,6 @@ public class FibonacciHeap<T>
     /// Número de nodos no Heap
     /// </summary>
     private int nNodes;
->>>>>>> 74655071d545d51f763dfc0be900942a3e77e066
 
     //~ Constructors -----------------------------------------------------------
 
@@ -470,7 +458,6 @@ public class FibonacciHeap<T>
                 minNode = y;
             }
         }
-
     }
 
     /// <summary>
