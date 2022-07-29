@@ -8,38 +8,19 @@ public class AnyaExpansionPolicy : IExpansionPolicy<Node>
     private AnyaHeuristic heuristic_;
     private EuclideanDistanceHeuristic euclidean_;
 
-    /// <summary>
-    /// Index dos sucessores (contagem)
-    /// </summary>
     private int idx_succ_;
     private Node start;
     private Node target;
-
-    /// <summary>
-    /// Nodo atual
-    /// </summary>
     private Node cnode_;
-
-    /// <summary>
-    /// Sucessor atual
-    /// </summary>
     private Node csucc_;
     private List<Node> successors_ = new List<Node>();
 
-    /// <summary>
-    /// Reduz branching removendo nodos que não possuem sucessores
-    /// </summary>
+    // reduces branching by eliminating nodes that cannot have successors
     private bool prune_ = true;
 
-    /// <summary>
-    /// Posição do target
-    /// </summary>
+    // the location of the target
     protected double tx_, ty_;
 
-    /// <summary>
-    /// Cria uma ExpansionPolicy a partir de um grid
-    /// </summary>
-    /// <param name="grid"></param>
     public AnyaExpansionPolicy(GridGraph grid)
     {
         grid_ = grid;
@@ -57,15 +38,17 @@ public class AnyaExpansionPolicy : IExpansionPolicy<Node>
         euclidean_ = new EuclideanDistanceHeuristic();
     }
 
-
-    public void Expand(Node node)
+    /// <summary>
+    /// 
+    /// </summary>
+    public void Expand(Node vertex)
     {
-        cnode_ = node;
+        cnode_ = vertex;
         csucc_ = null;
         idx_succ_ = 0;
         successors_.Clear();
 
-        if (node.Equals(start))
+        if (vertex.Equals(start))
         {
             Generate_start_successors(cnode_, successors_);
         }
@@ -98,10 +81,6 @@ public class AnyaExpansionPolicy : IExpansionPolicy<Node>
         return retval;
     }
 
-    /// <summary>
-    /// Getter de heuristic
-    /// </summary>
-    /// <returns>heuristic</returns>
     public IHeuristic<Node> Heuristic()
     {
         return heuristic_;
@@ -120,11 +99,11 @@ public class AnyaExpansionPolicy : IExpansionPolicy<Node>
         return result;
     }
 
-
-    /// <param name="start"></param>
-    /// <param name="target"></param>
-    /// <returns>true caso o nó inicial E o destino sejam vivisíveis de algum outro ponto discreto no grid,
-    /// ou seja, se eles não são adjacentes a 4 células bloqueadas.</returns>
+    /// <summary>
+    /// Inicializa as variáveis correspondentes aos nós inicial e final, e retorna verdadeiro caso 
+    /// tanto o nó inicial quanto o destino sejam vivisíveis de algum outro ponto discreto no grid,
+    /// ou seja, se eles não são adjacentes a 4 células bloqueadas.
+    /// </summary>
     public bool Validate_instance(Node start, Node target)
     {
         this.start = start;
@@ -137,30 +116,21 @@ public class AnyaExpansionPolicy : IExpansionPolicy<Node>
         int targetX = (int)target.root.x;
         int targetY = (int)target.root.y;
 
-        bool startResult = grid_.Get_point_is_visible(startX, startY); //Verifica se start é visível
-        bool targetResult = grid_.Get_point_is_visible(targetX, targetY); //Verifica se target é visível
+        bool startResult = grid_.Get_point_is_visible(startX, startY);
+        bool targetResult = grid_.Get_point_is_visible(targetX, targetY);
 
         return startResult && targetResult;
     }
 
-    /// <summary>
-    /// Getter de grid
-    /// </summary>
-    /// <returns>grid</returns>
     public GridGraph GetGrid() { return grid_; }
 
-    /// <summary>
-    /// 
-    /// </summary>
-    /// <param name="node"></param>
-    /// <param name="retval"></param>
     protected void Generate_successors(Node node, List<Node> retval)
     {
         IntervalProjection projection = new IntervalProjection();
 
-        if (node.root.y == node.interval.GetRow()) //caso a root e o interval estejam na mesma coluna (y)
+        if (node.root.y == node.interval.GetRow())
         {
-            projection.Project(node, grid_);        //projeta o nodo no grid
+            projection.Project(node, grid_);
             Flat_node_obs(node, retval, projection);
             projection.Project_f2c(node, grid_);
             Flat_node_nobs(node, retval, projection);

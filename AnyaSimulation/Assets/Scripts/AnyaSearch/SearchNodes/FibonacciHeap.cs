@@ -36,7 +36,7 @@ public class FibonacciHeap<T>
     /// <returns>true se vazio, false caso contrário</returns>
     public bool IsEmpty()
     {
-        return nNodes == 0;
+        return minNode is null;
     }
 
     /// <summary>
@@ -68,7 +68,7 @@ public class FibonacciHeap<T>
 
         FibonacciHeapNode<T> y = x.parent;
 
-        if ((y != null) && x.LessThan(y))
+        if (!(y is null) && x.LessThan(y))
         {
             Cut(x, y);
             CascadingCut(y);
@@ -117,7 +117,7 @@ public class FibonacciHeap<T>
         node.key = key;
 
         // concatenate node into min list
-        if (minNode != null)
+        if (!(minNode is null))
         {
             node.left = minNode;
             node.right = minNode.right;
@@ -168,7 +168,7 @@ public class FibonacciHeap<T>
     {
         FibonacciHeapNode<T> z = minNode;
 
-        if (nNodes > 0)
+        if (!(minNode is null))
         {
             int numKids = z.degree;
             FibonacciHeapNode<T> x = z.child;
@@ -237,13 +237,13 @@ public class FibonacciHeap<T>
     {
         FibonacciHeap<T> h = new FibonacciHeap<T>();
 
-        if ((h1 != null) && (h2 != null))
+        if (!(h1 is null) && !(h2 is null))
         {
             h.minNode = h1.minNode;
 
-            if (h.minNode != null)
+            if (!(h.minNode is null))
             {
-                if (h2.minNode != null)
+                if (!(h2.minNode is null))
                 {
                     h.minNode.right.left = h2.minNode.left;
                     h2.minNode.left.right = h.minNode.right;
@@ -330,7 +330,7 @@ public class FibonacciHeap<T>
         FibonacciHeapNode<T> z = y.parent;
 
         // if there's a parent...
-        if (z != null)
+        if (!(z is null))
         {
             // if y is unmarked, set it marked
             if (!y.mark)
@@ -369,7 +369,7 @@ public class FibonacciHeap<T>
         int numRoots = 0;
         FibonacciHeapNode<T> x = minNode;
 
-        if (x != null)
+        if (!(x is null))
         {
             numRoots++;
             x = x.right;
@@ -392,7 +392,7 @@ public class FibonacciHeap<T>
             for (; ; )
             {
                 FibonacciHeapNode<T> y = array[d];
-                if (y == null)
+                if (y is null)
                 {
                     // Nope.
                     break;
@@ -429,13 +429,13 @@ public class FibonacciHeap<T>
         for (int i = 0; i < arraySize; i++)
         {
             FibonacciHeapNode<T> y = array[i];
-            if (y == null)
+            if (y is null)
             {
                 continue;
             }
 
             // We've got a live one, add it to root list.
-            if (minNode != null)
+            if (!(minNode is null))
             {
                 // First remove node from root list.
                 y.left.right = y.right;
@@ -510,7 +510,7 @@ public class FibonacciHeap<T>
         // make y a child of x
         y.parent = x;
 
-        if (x.child == null)
+        if (x.child is null)
         {
             x.child = y;
             y.right = y;

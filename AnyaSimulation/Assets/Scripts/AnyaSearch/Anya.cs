@@ -66,10 +66,7 @@ public class Anya
     /// </summary>
     public void ComputePath()
     {
-<<<<<<< HEAD
-=======
         Debug.Log(anya.startNode.ToString() + ", " + anya.targetNode.ToString());
->>>>>>> 74655071d545d51f763dfc0be900942a3e77e066
         pathStartNode = anya.Search(anya.startNode, anya.targetNode);
     }
 
