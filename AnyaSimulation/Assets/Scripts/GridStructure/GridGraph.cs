@@ -173,7 +173,7 @@ namespace Anya_2d
         {
             for (int i = x; i < sizeX; i++)
             {
-                if (!Get_cell_is_traversable(i, y) || !Get_cell_is_traversable(i, y + 1))
+                if (!Get_cell_is_traversable(i, y))
                 {
                     return i;
                 }
@@ -191,7 +191,7 @@ namespace Anya_2d
         {
             for (int i = x; i >= 0; i--)
             {
-                if (!Get_cell_is_traversable(i, y) || !Get_cell_is_traversable(i, y + 1))
+                if (!Get_cell_is_traversable(i, y))
                 {
                     return i + 1;
                 }
@@ -209,7 +209,7 @@ namespace Anya_2d
 
             for (int i = discrete_x; i < sizeX; i++)
             {
-                if (Get_cell_is_traversable(i, y) || !Get_cell_is_traversable(i, y + 1))
+                if (Get_cell_is_traversable(i, y) || Get_point_is_corner(i, y - 1))
                 {
                     return i;
                 }
@@ -227,7 +227,7 @@ namespace Anya_2d
 
             for (int i = discrete_x; i >= 0; i--)
             {
-                if (Get_cell_is_traversable(i, y) || !Get_cell_is_traversable(i, y + 1))
+                if (Get_cell_is_traversable(i, y) || Get_point_is_corner(i, y - 1))
                 {
                     return i + 1;
                 }

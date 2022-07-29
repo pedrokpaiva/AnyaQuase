@@ -11,18 +11,26 @@ namespace Anya_2d
         // the furthest point left (resp. right) which is
         // visible from the left (resp. right) endpoint
         // of the projected interval.
+
+        /// <summary>
+        /// Ponto mais a esquerda visivel pelo interval
+        /// </summary>
         public double max_left;
+
+        /// <summary>
+        /// Ponto mais a direita visivel pelo interval
+        /// </summary>
         public double max_right;
         public int row;
 
-        // a projection is valid if it is possible to move the endpoints
-        // of the interval to the adjacent row (up or down) without
-        // intersecting an obstacle
+        /// <summary>
+        /// <see langword="true"/> se é possível mover os endpoints do intervalo às rows adjacentes (up down) sem obstáculos
+        /// </summary>
         public bool valid;
 
-        // A projection is observable if the projected left endpoint is 
-        // strictly smaller than the projected right endpoint.
-        // NB: a projection can be valid but non-observable.
+        /// <summary>
+        /// <see langword="true"/> se o endpoint esquerdo da projeção é menor que o direito
+        /// </summary>
         public bool observable;
 
         // these variables only used for conical projection
@@ -35,21 +43,29 @@ namespace Anya_2d
         // used when generating type iii non-observable conical successors
         public int type_iii_check_row;
 
-        // these variables only used for flat projection
-        // some terminology:
-        // a deadend flat node is one that cannot be projected further.
-        // an intermediate flat node is one that does not hug any walls.
+        /// <summary>
+        /// <see langword="true"/> se o nodo flat não pode mais ser projetado
+        /// </summary>
         public bool deadend;
+
+        /// <summary>
+        /// <see langword="true"/> se o nodo flat não toca nenhum obstáculo
+        /// </summary>
         public bool intermediate;
 
+        /// <summary>
+        /// Cria uma IntervalProjection
+        /// </summary>
         public IntervalProjection()
         {
             valid = false;
         }
 
-        // project the interval associated with @param node. the type of projection
-        // (conical or flat) depends on the location of the interval of @param node
-        // relative to its root. 
+        /// <summary>
+        /// Projeta o intervalo do nodo na grid
+        /// </summary>
+        /// <param name="node"></param>
+        /// <param name="grid"></param>
         public void Project(Node node, GridGraph grid)
         {
             Project(node.interval.GetLeft(), node.interval.GetRight(),
@@ -57,60 +73,77 @@ namespace Anya_2d
                     (int)node.root.x, (int)node.root.y, grid);
         }
 
+        /// <summary>
+        /// Projeta o intervalo de um nodo utilizando de seus valores
+        /// </summary>
+        /// <param name="ileft"></param>
+        /// <param name="iright"></param>
+        /// <param name="irow"></param>
+        /// <param name="rootx"></param>
+        /// <param name="rooty"></param>
+        /// <param name="grid"></param>
         public void Project(double ileft, double iright, int irow, int rootx, int rooty, GridGraph grid)
         {
-            observable = false;
+            observable = false; //por padrão seta essas bools para false
             valid = false;
-            if (rooty == irow)
+
+            if (rooty == irow)  //se coluna de root e intervalo é a mesma
             {
-                Project_flat(ileft, iright, rootx, rooty, grid);
+                Project_flat(ileft, iright, rootx, rooty, grid);    //gera projeção flat
             }
             else
             {
-                Project_cone(ileft, iright, irow, rootx, rooty, grid);
+                Project_cone(ileft, iright, irow, rootx, rooty, grid); //gera projeção conica
             }
         }
 
+        /// <summary>
+        /// Gera uma projeção conica de um nodo
+        /// </summary>
+        /// <param name="ileft"></param>
+        /// <param name="iright"></param>
+        /// <param name="irow"></param>
+        /// <param name="rootx"></param>
+        /// <param name="rooty"></param>
+        /// <param name="grid"></param>
         public void Project_cone(double ileft, double iright, int irow,
                 int rootx, int rooty, GridGraph grid)
         {
-            if (rooty < irow) // project down
+            if (rooty < irow) // caso coluna da root seja menor que a do intervalo projeta pra baixo
             {
-                check_vis_row = irow;
-                sterile_check_row = row = irow + 1;
+                check_vis_row = irow;       //row testada para visib é a propria do intervalo
+                sterile_check_row = row = irow + 1; //sterile_check_row é a row abaixo do intervalo
                 type_iii_check_row = irow - 1;
             }
-            else // project up
+            else //caso contrário, projeta pra cima
             {
                 Debug.Assert(rooty > irow);
-                sterile_check_row = irow - 2;
-                row = check_vis_row = irow - 1;
+                sterile_check_row = irow - 2;   //sterile_check_row é duas rows acima do intervalo
+                row = check_vis_row = irow - 1; //row testada para visib é acima do intervalo
                 type_iii_check_row = irow;
             }
 
-
-            valid = grid.Get_cell_is_traversable(
-                        (int)(ileft + grid.smallest_step), check_vis_row) &&
-                    grid.Get_cell_is_traversable(
-                        (int)(iright - grid.smallest_step), check_vis_row);
+            //verifica se a projecao é válida (ver def. de valid)
+            valid = grid.Get_cell_is_traversable((int)(ileft + grid.smallest_step), check_vis_row) &&
+                    grid.Get_cell_is_traversable((int)(iright - grid.smallest_step), check_vis_row);
 
             if (!valid) { return; }
 
             // interpolate the endpoints of the new interval onto the next row.
-            // TODO: cache rise, lrun, rrun and y_delta with the root
-            // to avoid branch instructions here?
-            double rise = Math.Abs(irow - rooty);
-            double lrun = rootx - ileft;
-            double rrun = iright - rootx;
 
-            // clip the interval if visibility from the root is obstructed.
-            // NB: +1 because we convert from tile coordinates to point coords
-            max_left = grid.Scan_cells_left((int)ileft, check_vis_row);
-            left = Math.Max(ileft - lrun / rise, max_left);
+            double rise = Math.Abs(irow - rooty); //distancia entre coluna da root e do intervalo (eixo y)
+            double lrun = rootx - ileft;    //distancia entre root e esquerda do intervalo (eixo x)
+            double rrun = iright - rootx;  //distancia entre root e direita do intervalo (eixo x)
 
+            // corta o intervalo se houver obstaculo na visibilidade da root
+            max_left = grid.Scan_cells_left((int)ileft, check_vis_row); //ponto que encontra obstáculo a esq
+            left = Math.Max(ileft - lrun / rise, max_left); //max entre proj triangular ou obtáculo
+
+            //mesmo para a direita
             max_right = grid.Scan_cells_right((int)iright, check_vis_row);
             right = Math.Min(iright + rrun / rise, max_right);
 
+            //ver def. observable
             observable = (left < right);
 
             // sanity checking; sometimes an interval cannot be projected 
@@ -119,8 +152,7 @@ namespace Anya_2d
             if (left >= max_right)
             {
                 left = grid.Get_cell_is_traversable(
-                        (int)(ileft - grid.smallest_step), check_vis_row) ?
-                                right : max_left;
+                                (int)(ileft - grid.smallest_step), check_vis_row) ? right : max_left;
             }
             if (right <= max_left)
             {
@@ -139,15 +171,15 @@ namespace Anya_2d
             if (rootx <= ileft)      // se a raiz está pra esquerda do endpoint da esquerda do intervalo
             {
                 left = iright;       // o endpoint da esquerda da projeção flat vai ser a direita do intervalo
-                right = grid.Scan_right(left, rooty);    // passa o endpoint da esquerda da projeção e a linha
-                deadend = !( grid.Get_cell_is_traversable((int)right, rooty) 
+                right = grid.Scan_right(left, rooty);    //projeção se estende até o obstáculo a direita
+                deadend = !(grid.Get_cell_is_traversable((int)right, rooty)
                           && grid.Get_cell_is_traversable((int)right, rooty - 1));
             }
             else                     // se a raiz está pra direita do endpoint da esquerda do intervalo
             {
                 right = ileft;       // o endpoint da direita da projeção flat vai ser a esquerda do intervalo
-                left = grid.Scan_left(right, rooty);     // passa o endpoint da direita da projeção e a linha
-                deadend = !( grid.Get_cell_is_traversable((int)(left - grid.smallest_step), rooty) 
+                left = grid.Scan_left(right, rooty);      //projeção se estende até o obstáculo a esquerda
+                deadend = !(grid.Get_cell_is_traversable((int)(left - grid.smallest_step), rooty)
                           && grid.Get_cell_is_traversable((int)(left - grid.smallest_step), rooty - 1));
             }
 
@@ -157,7 +189,11 @@ namespace Anya_2d
             valid = (left != right);
         }
 
-        // project through a flat node and onto an adjacent grid row
+        /// <summary>
+        /// Projeção de um nodo flat para uma coluna adjacente
+        /// </summary>
+        /// <param name="node"></param>
+        /// <param name="grid"></param>
         public void Project_f2c(Node node, GridGraph grid)
         {
             Debug.Assert(node.interval.GetRow() == node.root.y);
@@ -166,39 +202,46 @@ namespace Anya_2d
                     (int)node.root.x, (int)node.root.y, grid);
         }
 
-
+        /// <summary>
+        /// Projeção de um nodo flat para uma coluna adjacente
+        /// </summary>
+        /// <param name="ileft"></param>
+        /// <param name="iright"></param>
+        /// <param name="irow"></param>
+        /// <param name="rootx"></param>
+        /// <param name="rooty"></param>
+        /// <param name="grid"></param>
         private void Project_f2c(double ileft, double iright, int irow,
                 int rootx, int rooty, GridGraph grid)
         {
             // look to the right for successors
             // recall that each point (x, y) corresponds to the
             // top-left corner of a tile at location (x, y)
-            if (rootx <= ileft)
+            if (rootx <= ileft) //se a root  está mais a esquerda que a esquerda do intervalo
             {
                 // can we make a valid turn? valid means 
                 // (i) the path bends around a corner; 
                 // (ii) we do not step through any obstacles or through 
                 // double-corner points.
-                bool can_step =
+                bool can_step =                                               //verifica se podemos dobrar no ponto mais a direita
                         grid.Get_cell_is_traversable((int)iright, irow) &&
                         grid.Get_cell_is_traversable((int)iright, irow - 1);
                 if (!can_step) { valid = false; observable = false; return; }
 
-                // if the tile below is free, we must be going up
-                // else we round the corner and go down			
-                if (!grid.Get_cell_is_traversable((int)iright - 1, irow))
-                {   // going down
-                    sterile_check_row = row = irow + 1;
-                    check_vis_row = irow;
+
+                if (!grid.Get_cell_is_traversable((int)iright - 1, irow)) //se temos um obstáculo acima
+                {                                                           //vamos pra baixo
+                    sterile_check_row = row = irow + 1;     //sterile_check_row abaixo do intervalo
+                    check_vis_row = irow;                   //vis row na mesma coluna do intervalo
                 }
                 else
-                {   // going up
-                    row = check_vis_row = irow - 1;
-                    sterile_check_row = irow - 2;
+                {                                           // caso conrário vamos pra cima
+                    row = check_vis_row = irow - 1;     //vis row acima do intervalo
+                    sterile_check_row = irow - 2;           //sterile_check_row 2 acima do intervalo
                 }
 
-                left = max_left = iright;
-                right = max_right = grid.Scan_cells_right((int)left, check_vis_row);
+                left = max_left = iright;           //nova esquerda é a antiga direita
+                right = max_right = grid.Scan_cells_right((int)left, check_vis_row);    //nova direita é
             }
             else
             { // look to the left for successors
