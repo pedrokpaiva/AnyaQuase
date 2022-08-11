@@ -9,39 +9,25 @@ public class AnyaSearch
     private IHeuristic<Node> heuristic;
     private FibonacciHeap<Node> open;               // all the yet-to-be-expanded search nodes ordered by f value
     private Hashtable roots_ = new Hashtable();     // hash table of all visited roots with their best g-values
-
-
     private SearchNode lastNodeParent;
-
-    public bool verbose = false;
-    public bool isRecording = false;
-
-    public int expanded;
-    public int insertions;
-    public int generated;
-    public int heap_ops;
-
     public Node startNode;
     public Node targetNode;
+    
     public double mb_cost_;
 
     private static int search_id_counter = 0;
 
     public AnyaSearch(AnyaExpansionPolicy expander)
     {
-        roots_ = new Hashtable(65535);
-        open = new FibonacciHeap<Node>();
-        heuristic = expander.Heuristic();
         this.expander = expander;
+        this.roots_ = new Hashtable(65535);
+        this.open = new FibonacciHeap<Node>();
+        this.heuristic = expander.Heuristic();
     }
 
     private void Init()
     {
         search_id_counter++;
-        expanded = 0;
-        insertions = 0;
-        generated = 0;
-        heap_ops = 0;
         open.Clear();
         roots_.Clear();
     }
@@ -92,19 +78,12 @@ public class AnyaSearch
         while (!open.IsEmpty())                                         // enquanto open não é vazio
         {
             SearchNode current = (SearchNode)open.RemoveMin();          // remove o search node com menor custo de open
-            expander.Expand(current.GetData());
+            expander.Expand(current.GetData());                         // gera os sucessores do nó
 
-            if (current.GetData().interval.Contains(target.root))
+            if (current.GetData().interval.Contains(target.root))       // checa se o intervalo do nó atual contém o target
             {
-                // found the goal
                 cost = current.GetKey();
                 lastNodeParent = current;
-
-                if (verbose)
-                {
-                    //print_path(current, System.err);
-                    Debug.Log(target.ToString() + "; f=" + current.GetKey());
-                }
                 break;
             }
 
@@ -120,8 +99,7 @@ public class AnyaSearch
                 bool insert = true;
                 int root_hash = expander.Hash(succ);
                 SearchNode root_rep = (SearchNode)roots_[root_hash];
-                double new_g_value = current.GetSecondaryKey() +
-                        expander.Step_cost();
+                double new_g_value = current.GetSecondaryKey() + expander.Step_cost();
 
 
                 // Root level pruning:
@@ -133,10 +111,8 @@ public class AnyaSearch
                 if (root_rep != null)
                 {
                     double root_best_g = root_rep.GetSecondaryKey();
-                    insert = (new_g_value - root_best_g)
-                                   <= GridGraph.epsilon;
-                    bool eq = (new_g_value - root_best_g)
-                            >= -GridGraph.epsilon;
+                    insert = (new_g_value - root_best_g) <= GridGraph.epsilon;
+                    bool eq = (new_g_value - root_best_g) >= -GridGraph.epsilon;
                     if (insert && eq)
                     {
                         int p_rep_hash = expander.Hash(root_rep.parent.GetData());
@@ -149,33 +125,12 @@ public class AnyaSearch
                     neighbour.ResetNode(search_id_counter);
                     neighbour.parent = current;
 
-
-                    open.Insert(neighbour,
-                            new_g_value +
-                            heuristic.GetValue(neighbour.GetData(), target),
-                            new_g_value);
+                    open.Insert(neighbour, new_g_value + heuristic.GetValue(neighbour.GetData(), target), new_g_value);
                     roots_.Add(root_hash, neighbour);
-
-
-
-                }
-                else
-                {
-                    if (verbose)
-                    {
-                        Console.WriteLine("\told rootg: " + root_rep.GetSecondaryKey());
-                        Console.WriteLine("\tNOT inserting with f=" + neighbour.GetKey() + " (g= " + new_g_value + ");" + neighbour.ToString());
-                    }
-
                 }
             }
         }
-        if (verbose)
-        {
-            Console.WriteLine("finishing search;");
-        }
         return cost;
-
     }
 
     private SearchNode Generate(Node v)

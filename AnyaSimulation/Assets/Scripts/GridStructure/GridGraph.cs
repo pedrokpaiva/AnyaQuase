@@ -67,17 +67,11 @@ namespace Anya_2d
         /// </summary>
         public bool IsBlocked(int x, int y)
         {
-            if (x >= sizeX || y >= sizeY)
+            if (x >= sizeX || y >= sizeY || x < 0 || y < 0)
             {
                 return true;
             }
-
-            if (x < 0 || y < 0)
-            {
-                return true;
-            }
-
-            return !tiles[y, x];
+            return tiles[y, x];
         }
 
         /// <summary>
@@ -117,13 +111,12 @@ namespace Anya_2d
         /// </summary>
         public bool Get_cell_is_traversable(int cx, int cy)
         {
-            return (!IsBlocked(cx, cy) || !IsBlocked(cx + 1, cy) || !IsBlocked(cx, cy + 1) ||
-                !IsBlocked(cx + 1, cy + 1));
+            return (!IsBlocked(cx, cy) || !IsBlocked(cx + 1, cy) || !IsBlocked(cx, cy + 1) || !IsBlocked(cx + 1, cy + 1));
         }
 
         /// <summary>
         /// Retorna verdadeiro caso o ponto seja visível de algum outro ponto discreto no grid,
-        /// ou seja, se ele não é adjacente a 4 células bloqueadas.
+        /// ou seja, se ele é adjacente a alguma célula não bloqueada.
         /// </summary>
         public bool Get_point_is_visible(int x, int y)
         {
@@ -136,8 +129,21 @@ namespace Anya_2d
         }
 
         /// <summary>
-        /// Retorna verdadeiro caso o ponto seja uma double corner, ou seja, se ele é adjacente a 2 
-        /// diagonalmente adjacentes células bloqueadas.
+        /// Retorna verdadeiro caso o ponto não seja adjacente a algum obstáculo.
+        /// </summary>
+        public bool Get_point_is_free(int x, int y)
+        {
+            bool cellNW = Get_cell_is_traversable(x - 1, y - 1);
+            bool cellNE = Get_cell_is_traversable(x, y - 1);
+            bool cellSW = Get_cell_is_traversable(x - 1, y);
+            bool cellSE = Get_cell_is_traversable(x, y);
+
+            return cellNW && cellNE && cellSW && cellSE;
+        }
+
+        /// <summary>
+        /// Retorna verdadeiro caso o ponto seja uma double corner, ou seja, se ele é adjacente a 2 células
+        /// diagonalmente adjacentes exclusivamente bloqueadas.
         /// </summary>
         public bool Get_point_is_double_corner(int x, int y)
         {
@@ -147,6 +153,19 @@ namespace Anya_2d
             bool cellSE = Get_cell_is_traversable(x, y);
 
             return ((!cellNW & !cellSE) & cellSW & cellNE) || ((!cellSW & !cellNE) & cellNW & cellSE);
+        }
+
+        /// <summary>
+        /// Retorna verdadeiro caso o ponto seja um beco sem saída, ou seja, se ele é adjacente a 3 células bloqueadas.
+        /// </summary>
+        public bool Get_point_is_adjacent_3obstacles(int x, int y)
+        {
+            bool cellNW = Get_cell_is_traversable(x - 1, y - 1);
+            bool cellNE = Get_cell_is_traversable(x, y - 1);
+            bool cellSW = Get_cell_is_traversable(x - 1, y);
+            bool cellSE = Get_cell_is_traversable(x, y);
+
+            return ((!cellNW & !cellSE) & (cellSW || cellNE)) || ((!cellSW & !cellNE) & (cellNW || cellSE));
         }
 
         /// <summary>
@@ -164,9 +183,16 @@ namespace Anya_2d
         }
 
         /// <summary>
+        /// Retorna verdadeiro caso o ponto seja um canto do grid.
+        /// </summary>
+        public bool Get_point_is_grid_corner(int x, int y)
+        {
+            return (x == 0 && y == 0) || (x == 0 && y == sizeY - 1) || (x == sizeX - 1 && y == 0) || (x == sizeX - 1 && y == sizeY - 1);
+        }
+
+        /// <summary>
         /// Escaneia as células do grid, começando em (x,y) e indo na direção positiva.
-        //// Retorna as coordenadas x do primeiro ponto de um obstáculo atingido, na linha atual
-        /// ou na linha de cima.
+        /// Retorna o índice do último ponto observável naquela linha antes de um obstáculo.
         /// Se nenhum obstáculo foi atingido, retorna o índice do último ponto da linha.
         /// </summary>
         public int Scan_cells_right(int x, int y)
@@ -183,8 +209,7 @@ namespace Anya_2d
 
         /// <summary>
         /// Escaneia as células do grid, começando em (x,y) e indo na direção negativa.
-        ///  /// Retorna as coordenadas x do primeiro ponto de um obstáculo atingido, na linha atual
-        /// ou na linha de cima.
+        /// Retorna o índice do último ponto observável naquela linha antes de um obstáculo.
         /// Se nenhum obstáculo foi atingido, retorna o índice do primeiro ponto da linha.
         /// </summary>
         public int Scan_cells_left(int x, int y)
@@ -205,15 +230,30 @@ namespace Anya_2d
         /// </summary>
         public int Scan_right(double x, int y)
         {
-            int discrete_x = (int)(x + smallest_step);
+            int discrete_x = (int)(x + smallest_step), i;
 
-            for (int i = discrete_x; i < sizeX; i++)
+            // se for um beco sem saída ou o ponto não for adjacente a nenhum obstáculo, retorna o próprio ponto
+            // obs: não testa isso caso o ponto seja um canto do grid
+            if (!Get_point_is_grid_corner(discrete_x, y) && (Get_point_is_adjacent_3obstacles(discrete_x, y) || Get_point_is_free(discrete_x, y)))
             {
-                if (Get_cell_is_traversable(i, y) || Get_point_is_corner(i, y - 1))
+                return discrete_x;
+            }
+
+            for (i = discrete_x;  i < sizeX; i++)
+            {
+                // se bateu de cara em uma parede, retorna i
+                if (!Get_cell_is_traversable(i, y) && !Get_cell_is_traversable(i, y - 1))
                 {
                     return i;
                 }
+                int j = i + 1;
+                // se achou uma corner 
+                if (j < sizeX && Get_point_is_corner(j, y) )
+                {
+                    return j;
+                }
             }
+            if (i >= sizeX) return sizeX - 1;
             return discrete_x;
         }
 
@@ -223,15 +263,29 @@ namespace Anya_2d
         /// </summary>
         public int Scan_left(double x, int y)
         {
-            int discrete_x = (int)(x + smallest_step);
+            int discrete_x = (int)(x), i;
 
-            for (int i = discrete_x; i >= 0; i--)
+            // se for um beco sem saída ou o ponto não for adjacente a nenhum obstáculo, retorna o próprio ponto
+            // obs: não testa isso caso o ponto seja um canto do grid
+            if (!Get_point_is_grid_corner(discrete_x, y) && (Get_point_is_adjacent_3obstacles(discrete_x, y) || Get_point_is_free(discrete_x, y)))
             {
-                if (Get_cell_is_traversable(i, y) || Get_point_is_corner(i, y - 1))
+                return discrete_x;
+            }
+
+            for (i = discrete_x - 1; i >= 0; i--)
+            {
+                // se bateu de cara em uma parede, retorna i
+                if (!Get_cell_is_traversable(i, y) && !Get_cell_is_traversable(i, y - 1))
                 {
                     return i + 1;
                 }
+                // se achou uma corner 
+                if (Get_point_is_corner(i, y))
+                {
+                    return i;
+                }
             }
+            if (i < 0) return 0;
             return discrete_x;
         }
 

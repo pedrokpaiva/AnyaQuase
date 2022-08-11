@@ -8,108 +8,34 @@ public class AnyaExpansionPolicy : IExpansionPolicy<Node>
     private AnyaHeuristic heuristic_;
     private EuclideanDistanceHeuristic euclidean_;
 
-    private int idx_succ_;
-    private Node start;
-    private Node target;
-    private Node cnode_;
-    private Node csucc_;
-    private List<Node> successors_ = new List<Node>();
+    private Node startNode;
+    protected double target_x, target_y;
+    private Node currentNode;           
+    private Node currentNode_successor;
+    private int index_currentNode_successor;      // esse index é o do sucessor atual (sendo testado) do nó atual 
+    private List<Node> currentNode_list_successors = new List<Node>();
 
     // reduces branching by eliminating nodes that cannot have successors
     private bool prune_ = true;
 
-    // the location of the target
-    protected double tx_, ty_;
-
     public AnyaExpansionPolicy(GridGraph grid)
     {
         grid_ = grid;
-        successors_ = new List<Node>(32);
+        currentNode_list_successors = new List<Node>(32);
         heuristic_ = new AnyaHeuristic();
         euclidean_ = new EuclideanDistanceHeuristic();
-    }
-
-    public AnyaExpansionPolicy(GridGraph grid, bool prune)
-    {
-        grid_ = grid;
-        prune_ = prune;
-        successors_ = new List<Node>(32);
-        heuristic_ = new AnyaHeuristic();
-        euclidean_ = new EuclideanDistanceHeuristic();
-    }
-
-    /// <summary>
-    /// 
-    /// </summary>
-    public void Expand(Node vertex)
-    {
-        cnode_ = vertex;
-        csucc_ = null;
-        idx_succ_ = 0;
-        successors_.Clear();
-
-        if (vertex.Equals(start))
-        {
-            Generate_start_successors(cnode_, successors_);
-        }
-        else
-        {
-            Generate_successors(cnode_, successors_);
-        }
-    }
-
-    public Node Next()
-    {
-        csucc_ = null;
-        if (idx_succ_ < successors_.Count)
-        {
-            csucc_ = successors_[idx_succ_++];
-        }
-        return csucc_;
-    }
-
-    public bool HasNext()
-    {
-        return idx_succ_ < successors_.Count;
-    }
-
-    public double Step_cost()
-    {
-        Debug.Assert(cnode_ != null && csucc_ != null);
-        double retval = euclidean_.H(cnode_.root.x, cnode_.root.y,
-                    csucc_.root.x, csucc_.root.y);
-        return retval;
-    }
-
-    public IHeuristic<Node> Heuristic()
-    {
-        return heuristic_;
-    }
-
-
-    public bool Validate_instance_old(Node start, Node target)
-    {
-        this.start = start;
-        this.target = target;
-        tx_ = this.target.root.x;
-        ty_ = this.target.root.y;
-        bool result =
-                grid_.Get_cell_is_traversable((int)start.root.x, (int)start.root.y) &&
-                grid_.Get_cell_is_traversable((int)target.root.x, (int)target.root.y);
-        return result;
     }
 
     /// <summary>
     /// Inicializa as variáveis correspondentes aos nós inicial e final, e retorna verdadeiro caso 
-    /// tanto o nó inicial quanto o destino sejam vivisíveis de algum outro ponto discreto no grid,
+    /// tanto o nó inicial quanto o destino sejam visíveis de algum outro ponto discreto no grid,
     /// ou seja, se eles não são adjacentes a 4 células bloqueadas.
     /// </summary>
     public bool Validate_instance(Node start, Node target)
     {
-        this.start = start;
-        this.target = target;
-        tx_ = this.target.root.x;
-        ty_ = this.target.root.y;
+        this.startNode = start;
+        this.target_x = target.root.x;
+        this.target_y = target.root.y;
 
         int startX = (int)start.root.x;
         int startY = (int)start.root.y;
@@ -122,13 +48,114 @@ public class AnyaExpansionPolicy : IExpansionPolicy<Node>
         return startResult && targetResult;
     }
 
-    public GridGraph GetGrid() { return grid_; }
+    /// <summary>
+    /// Gera os sucessores do nó e atualiza as variáveis correspondentes.
+    /// </summary>
+    public void Expand(Node node)
+    {
+        currentNode = node;
+        currentNode_successor = null;
+        index_currentNode_successor = 0;
+        currentNode_list_successors.Clear();
 
+        if (node.Equals(startNode))
+        {
+            Generate_start_successors(currentNode, currentNode_list_successors);
+        }
+        else
+        {
+            Generate_successors(currentNode, currentNode_list_successors);
+        }
+    }
+
+    /// <summary>
+    /// Vai para o próximo sucessor a ser testado do nó atual, caso ainda contenha algum, senão retorna null.
+    /// </summary>
+    public Node Next()
+    {
+        currentNode_successor = null;
+        if (index_currentNode_successor < currentNode_list_successors.Count)
+        {
+            currentNode_successor = currentNode_list_successors[index_currentNode_successor++];
+        }
+        return currentNode_successor;
+    }
+
+    /// <summary>
+    /// Retorna verdadeiro caso o nó atual ainda contenha algum sucessor não testado, senão retorna falso.
+    /// </summary>
+    public bool HasNext()
+    {
+        return index_currentNode_successor < currentNode_list_successors.Count;
+    }
+
+    /// <summary>
+    /// Retorna o custo para ir do nó atual para o seu atual sucessor sendo testado.
+    /// (custo = distância euclidiana)
+    /// </summary>
+    public double Step_cost()
+    {
+        Debug.Assert(currentNode != null && currentNode_successor != null);
+        double retval = euclidean_.H(currentNode.root.x, currentNode.root.y, currentNode_successor.root.x, currentNode_successor.root.y);
+        return retval;
+    }
+
+    /// <summary>
+    /// Retorna uma lista com os sucessores do nó passado, este que deve ser o nó inicial.
+    /// </summary>
+    protected void Generate_start_successors(Node node, List<Node> retval)
+    {
+        int rootx = (int)node.root.x;
+        int rooty = (int)node.root.y;
+        IntervalProjection projection = new IntervalProjection();
+        
+        bool startIsDoubleCorner = grid_.Get_point_is_double_corner((int)node.root.x, (int)node.root.y);
+        if (!startIsDoubleCorner)
+        {
+            // gera a projeção flat pra esquerda do ponto inicial
+            projection.Project(rootx, rootx, rooty, rootx + 1, rooty, grid_);  // usa uma fake root (rooty, rootx + 1)
+            // gera os sucessores observáveis a partir dessa projeção
+            Generate_observable_flat__(projection, rootx, rooty, node, retval);
+        }
+        // gera os observadores flat pra direita do ponto inicial
+        projection.Project(rootx, rootx, rooty, rootx - 1, rooty, grid_);      // usa uma fake root (rooty, rootx - 1)
+        // gera os sucessores observáveis a partir dessa projeção
+        Generate_observable_flat__(projection, rootx, rooty, node, retval);
+
+
+        // gera os sucessores observáveis na linha abaixo do ponto inicial
+        int max_left = grid_.Scan_cells_left(rootx - 1, rooty);
+        int max_right = grid_.Scan_cells_right(rootx, rooty);
+        if (max_left != rootx && !startIsDoubleCorner)
+        {
+            Split_interval_make_successors(max_left, rootx, rooty + 1, rootx, rooty, rooty + 1, node, retval);
+        }
+        if (max_right != rootx)
+        {
+            Split_interval_make_successors(rootx, max_right, rooty + 1, rootx, rooty, rooty + 1, node, retval);
+        }
+
+        // gera os sucessores observáveis na linha acima do ponto inicial
+        max_left = grid_.Scan_cells_left(rootx - 1, rooty - 1);
+        max_right = grid_.Scan_cells_right(rootx, rooty - 1);
+        if (max_left != rootx && !startIsDoubleCorner)
+        {
+            Split_interval_make_successors(max_left, rootx, rooty - 1, rootx, rooty, rooty - 2, node, retval);
+        }
+        if (max_right != rootx)
+        {
+            Split_interval_make_successors(rootx, max_right, rooty - 1, rootx, rooty, rooty - 2, node, retval);
+        }
+    }
+
+    /// <summary>
+    /// Gera a lista de sucessores do nó.
+    /// </summary>
     protected void Generate_successors(Node node, List<Node> retval)
     {
         IntervalProjection projection = new IntervalProjection();
 
-        if (node.root.y == node.interval.GetRow())
+        if (node.root.y == node.interval.GetRow())    // se a linha do nó é igual a linha do intervalo
         {
             projection.Project(node, grid_);
             Flat_node_obs(node, retval, projection);
@@ -143,73 +170,7 @@ public class AnyaExpansionPolicy : IExpansionPolicy<Node>
         }
     }
 
-
-
-    /// <summary>
-    /// 
-    /// </summary>
-    protected void Generate_start_successors(Node node, List<Node> retval)
-    {
-        // garante que o nó passado é o inicial mesmo
-        Debug.Assert(node.interval.GetLeft() == node.interval.GetRight() &&
-                     node.interval.GetLeft() == node.root.x &&
-                     node.interval.GetRow() == node.root.y);
-
-        int rootx = (int)node.root.x;
-        int rooty = (int)node.root.y;
-
-        // certain successors will be ignored if the start is a double-corner
-        bool startIsDoubleCorner = grid_.Get_point_is_double_corner((int)node.root.x, (int)node.root.y);
-
-
-        // NB: hacky implementation; we use a fake root for the projection
-        IntervalProjection projection = new IntervalProjection();
-        if (!startIsDoubleCorner)
-        {
-            // generate flat observable successors left of the start point
-            projection.Project(rootx, rootx, rooty, rootx + 1, rooty, grid_);
-            Generate_observable_flat__(projection, rootx, rooty, node, retval);
-        }
-
-        // generate flat observable successors right of the start point
-        // NB: hacky implementation; we use a fake root for the projection
-        projection.Project(rootx, rootx, rooty, rootx - 1, rooty, grid_);
-        Generate_observable_flat__(projection, rootx, rooty, node, retval);
-
-        // generate conical observable successors below the start point 
-        int max_left = grid_.Scan_cells_left(rootx - 1, rooty);
-        int max_right = grid_.Scan_cells_right(rootx, rooty);
-        if (max_left != rootx && !startIsDoubleCorner)
-        {
-            Split_interval_make_successors(max_left, rootx, rooty + 1,
-                    rootx, rooty, rooty + 1, node, retval);
-        }
-        if (max_right != rootx)
-        {
-            Split_interval_make_successors(rootx, max_right, rooty + 1,
-                    rootx, rooty, rooty + 1, node, retval);
-        }
-
-        // generate conical observable successors above the start point
-        max_left = grid_.Scan_cells_left(rootx - 1, rooty - 1);
-        max_right = grid_.Scan_cells_right(rootx, rooty - 1);
-        if (max_left != rootx && !startIsDoubleCorner)
-        {
-            Split_interval_make_successors(max_left, rootx, rooty - 1,
-                    rootx, rooty, rooty - 2, node, retval);
-        }
-
-        if (max_right != rootx)
-        {
-            Split_interval_make_successors(rootx, max_right, rooty - 1,
-                    rootx, rooty, rooty - 2, node, retval);
-        }
-    }
-
-    private void Split_interval_make_successors(
-            double max_left, double max_right, int irow,
-            int rootx, int rooty, int sterile_check_row,
-            Node parent, List<Node> retval)
+    private void Split_interval_make_successors(double max_left, double max_right, int irow, int rootx, int rooty, int sterile_check_row, Node parent, List<Node> retval)
     {
         if (max_left == max_right) { return; }
 
@@ -226,11 +187,8 @@ public class AnyaExpansionPolicy : IExpansionPolicy<Node>
             succ_left = grid_.Scan_left(succ_right, irow);
             if (forced_succ || !Sterile(succ_left, succ_right, sterile_check_row))
             {
-                successor = new Node(parent,
-                        new Interval(succ_left, succ_right, irow),
-                        rootx, rooty);
-                successor.interval.SetLeft(
-                        succ_left < max_left ? max_left : succ_left);
+                successor = new Node(parent, new Interval(succ_left, succ_right, irow), rootx, rooty);
+                successor.interval.SetLeft(succ_left < max_left ? max_left : succ_left);
                 retval.Add(successor);
             }
         } while ((succ_left != succ_right) && (succ_left > max_left));
@@ -238,21 +196,15 @@ public class AnyaExpansionPolicy : IExpansionPolicy<Node>
 
         // TODO: recurse over every node (NB: intermediate check includes goal check) 
         // TODO: recurse until we start heading e.g. up instead of down (flat is ok)
-        if (!forced_succ && retval.Count == (num_successors + 1) &&
-                Intermediate(successor.GetInterval(), rootx, rooty))
+        if (!forced_succ && retval.Count == (num_successors + 1) && Intermediate(successor.GetInterval(), rootx, rooty))
         {
             retval.RemoveAt(retval.Count - 1);
             // TODO: optimise this new call out?
             IntervalProjection proj = new IntervalProjection();
-            proj.Project_cone(
-                    successor.interval.GetLeft(),
-                    successor.interval.GetRight(),
-                    successor.interval.GetRow(),
-                    rootx, rooty, grid_);
+            proj.Project_cone(successor.interval.GetLeft(), successor.interval.GetRight(), successor.interval.GetRow(), rootx, rooty, grid_);
             if (proj.valid && proj.observable)
             {
-                Split_interval_make_successors(proj.left, proj.right, proj.row,
-                        rootx, rooty, proj.sterile_check_row, parent, retval);
+                Split_interval_make_successors(proj.left, proj.right, proj.row, rootx, rooty, proj.sterile_check_row, parent, retval);
             }
         }
     }
@@ -296,39 +248,32 @@ public class AnyaExpansionPolicy : IExpansionPolicy<Node>
 
         bool rightroot = (int)((uint)(tmp_right - rootx) >> 31) == 1;
         bool leftroot = (int)((uint)(rootx - tmp_left) >> 31) == 1;
-        bool right_turning_point = false;
-        bool left_turning_point = false;
+        bool right_turning_point;
+        bool left_turning_point;
         if (rooty < row)
         {
-            left_turning_point = discrete_left &&
-                    grid_.Get_point_is_corner(tmp_left, row) &&
-                    (!grid_.Get_cell_is_traversable(tmp_left - 1, row - 1) ||
-                            leftroot);
-            right_turning_point = discrete_right &&
-                    grid_.Get_point_is_corner(tmp_right, row) &&
-                    (!grid_.Get_cell_is_traversable(tmp_right, row - 1) ||
-                            rightroot);
+            left_turning_point = discrete_left && grid_.Get_point_is_corner(tmp_left, row) &&
+                                 (!grid_.Get_cell_is_traversable(tmp_left - 1, row - 1) || leftroot);
+            right_turning_point = discrete_right && grid_.Get_point_is_corner(tmp_right, row) &&
+                                  (!grid_.Get_cell_is_traversable(tmp_right, row - 1) || rightroot);
         }
         else
         {
-            left_turning_point = discrete_left &&
-                    grid_.Get_point_is_corner(tmp_left, row) &&
-                    (!grid_.Get_cell_is_traversable(tmp_left - 1, row) ||
-                            leftroot);
-            right_turning_point = discrete_right &&
-                    grid_.Get_point_is_corner(tmp_right, row) &&
-                    (!grid_.Get_cell_is_traversable(tmp_right, row) ||
-                            rightroot);
+            left_turning_point = discrete_left && grid_.Get_point_is_corner(tmp_left, row) &&
+                                 (!grid_.Get_cell_is_traversable(tmp_left - 1, row) || leftroot);
+            right_turning_point = discrete_right && grid_.Get_point_is_corner(tmp_right, row) && 
+                                  (!grid_.Get_cell_is_traversable(tmp_right, row) || rightroot);
         }
 
-        return !((discrete_left && left_turning_point) ||
-                    (discrete_right && right_turning_point));
+        return !((discrete_left && left_turning_point) || (discrete_right && right_turning_point));
     }
 
-
+    /// <summary>
+    /// Retorna verdadeiro caso o intervalo contenha o target, senão retorna falso.
+    /// </summary>
     private bool Contains_target(double left, double right, int row)
     {
-        return (row == ty_) && (tx_ >= left - GridGraph.epsilon) && (tx_ <= right + GridGraph.epsilon);
+        return (row == target_y) && (target_x >= left - GridGraph.epsilon) && (target_x <= right + GridGraph.epsilon);
     }
 
     // TODO: assumes vertical move to the next row is always valid.
@@ -342,13 +287,10 @@ public class AnyaExpansionPolicy : IExpansionPolicy<Node>
         Generate_observable_cone__(projection, (int)root.x, (int)root.y, node, retval);
     }
 
-    private void Generate_observable_cone__(IntervalProjection projection,
-        int rootx, int rooty, Node parent, List<Node> retval)
+    private void Generate_observable_cone__(IntervalProjection projection, int rootx, int rooty, Node parent, List<Node> retval)
     {
         if (!(projection.valid && projection.observable)) { return; }
-        Split_interval_make_successors(projection.left, projection.right,
-                projection.row, rootx, rooty,
-                projection.sterile_check_row, parent, retval);
+        Split_interval_make_successors(projection.left, projection.right, projection.row, rootx, rooty, projection.sterile_check_row, parent, retval);
     }
 
     // there are two kinds of non-observable successors
@@ -370,33 +312,26 @@ public class AnyaExpansionPolicy : IExpansionPolicy<Node>
         // non-observable successor type (iii)
         if (!projection.observable)
         {
-            if (node.root.x > iright && node.interval.discrete_right &&
-                    grid_.Get_point_is_corner((int)iright, irow))
+            if (node.root.x > iright && node.interval.discrete_right && grid_.Get_point_is_corner((int)iright, irow))
             {
-                Split_interval_make_successors(projection.max_left, iright, projection.row,
-                        (int)iright, irow, projection.sterile_check_row, node, retval);
+                Split_interval_make_successors(projection.max_left, iright, projection.row, (int)iright, irow, projection.sterile_check_row, node, retval);
             }
-            else if (node.root.x < ileft && node.interval.discrete_left &&
-                    grid_.Get_point_is_corner((int)ileft, irow))
+            else if (node.root.x < ileft && node.interval.discrete_left && grid_.Get_point_is_corner((int)ileft, irow))
             {
-                Split_interval_make_successors(ileft, projection.max_right, projection.row,
-                        (int)ileft, irow, projection.sterile_check_row, node, retval);
+                Split_interval_make_successors(ileft, projection.max_right, projection.row, (int)ileft, irow, projection.sterile_check_row, node, retval);
             }
             // non-observable successors to the left of the current interval
-            if (node.interval.discrete_left &&
-                    !grid_.Get_cell_is_traversable((int)ileft - 1, projection.type_iii_check_row) &&
-                    grid_.Get_cell_is_traversable((int)ileft - 1, projection.check_vis_row))
+            if (node.interval.discrete_left && !grid_.Get_cell_is_traversable((int)ileft - 1, projection.type_iii_check_row) &&
+                                                grid_.Get_cell_is_traversable((int)ileft - 1, projection.check_vis_row))
             {
                 projection.Project_flat(ileft - grid_.smallest_step, ileft, (int)ileft, irow, grid_);
                 Generate_observable_flat__(projection, (int)ileft, irow, node, retval);
             }
             // non-observable successors to the right of the current interval
-            if (node.interval.discrete_right &&
-                    !grid_.Get_cell_is_traversable((int)iright, projection.type_iii_check_row) &&
-                    grid_.Get_cell_is_traversable((int)iright, projection.check_vis_row))
+            if (node.interval.discrete_right && !grid_.Get_cell_is_traversable((int)iright, projection.type_iii_check_row) &&
+                                                 grid_.Get_cell_is_traversable((int)iright, projection.check_vis_row))
             {
-                projection.Project_flat(iright, iright + grid_.smallest_step,
-                        (int)iright, irow, grid_); // NB: dummy root
+                projection.Project_flat(iright, iright + grid_.smallest_step, (int)iright, irow, grid_); // NB: dummy root
                 Generate_observable_flat__(projection, (int)iright, irow, node, retval);
             }
             return;
@@ -407,8 +342,7 @@ public class AnyaExpansionPolicy : IExpansionPolicy<Node>
         int corner_row = irow - (int)((uint)((int)node.root.y - irow) >> 31);
 
         // non-observable successors to the left of the current interval
-        if (node.interval.discrete_left &&
-                grid_.Get_point_is_corner((int)ileft, irow))
+        if (node.interval.discrete_left && grid_.Get_point_is_corner((int)ileft, irow))
         {
             // flat successors from the interval row
             if (!grid_.Get_cell_is_traversable((int)(ileft - 1), corner_row))
@@ -418,8 +352,7 @@ public class AnyaExpansionPolicy : IExpansionPolicy<Node>
             }
 
             // conical successors from the projected row
-            Split_interval_make_successors(projection.max_left, projection.left, projection.row,
-                                (int)ileft, irow, projection.sterile_check_row, node, retval);
+            Split_interval_make_successors(projection.max_left, projection.left, projection.row, (int)ileft, irow, projection.sterile_check_row, node, retval);
         }
 
         // non-observable successors to the right of the current interval
@@ -433,8 +366,7 @@ public class AnyaExpansionPolicy : IExpansionPolicy<Node>
             }
 
             // conical successors from the projected row
-            Split_interval_make_successors(projection.right, projection.max_right, projection.row,
-                    (int)iright, irow, projection.sterile_check_row, node, retval);
+            Split_interval_make_successors(projection.right, projection.max_right, projection.row, (int)iright, irow, projection.sterile_check_row, node, retval);
         }
     }
 
@@ -444,30 +376,28 @@ public class AnyaExpansionPolicy : IExpansionPolicy<Node>
         Generate_observable_flat__(projection, (int)root.x, (int)root.y, node, retval);
     }
 
+    /// <summary>
+    /// Gera a lista de sucessores observáveis a partir da projeção flat.
+    /// </summary>
     private void Generate_observable_flat__(IntervalProjection projection, int rootx, int rooty, Node parent, List<Node> retval)
     {
         Debug.Assert(projection.row == rooty);
         if (!projection.valid) { return; }
 
-        bool goal_interval =
-            Contains_target(projection.left, projection.right, projection.row);
+        // Checa se a projeção contém o target
+        bool goal_interval = Contains_target(projection.left, projection.right, projection.row);
+        
         if (projection.intermediate && prune_ && !goal_interval)
         {
             // ignore intermediate nodes and project further along the row
-            projection.Project(projection.left, projection.right,
-                    projection.row, rootx, rooty, grid_);
+            projection.Project(projection.left, projection.right, projection.row, rootx, rooty, grid_);
             // check if the projection contains the goal
-            goal_interval =
-                Contains_target(projection.left, projection.right,
-                        projection.row);
+            goal_interval = Contains_target(projection.left, projection.right, projection.row);
         }
 
         if (!projection.deadend || !prune_ || goal_interval)
         {
-            retval.Add(
-                new Node(parent,
-                    new Interval(projection.left, projection.right,
-                            projection.row), rootx, rooty));
+            retval.Add(new Node(parent, new Interval(projection.left, projection.right, projection.row), rootx, rooty));
         }
     }
 
@@ -475,7 +405,6 @@ public class AnyaExpansionPolicy : IExpansionPolicy<Node>
     {
         if (!projection.valid) { return; }
         // conical successors from the projected row
-
         int new_rootx;
         int new_rooty = node.interval.GetRow();
         if (node.root.x <= node.interval.GetLeft())
@@ -486,10 +415,7 @@ public class AnyaExpansionPolicy : IExpansionPolicy<Node>
         {
             new_rootx = (int)node.interval.GetLeft();
         }
-
-        Split_interval_make_successors(
-                projection.left, projection.right, projection.row,
-                new_rootx, new_rooty, projection.sterile_check_row, node, retval);
+        Split_interval_make_successors(projection.left, projection.right, projection.row, new_rootx, new_rooty, projection.sterile_check_row, node, retval);
     }
 
     public int Hash(Node n)
@@ -502,5 +428,10 @@ public class AnyaExpansionPolicy : IExpansionPolicy<Node>
     public int GetHashCode(Node v)
     {
         return v.GetHashCode();
+    }
+
+    public IHeuristic<Node> Heuristic()
+    {
+        return heuristic_;
     }
 }

@@ -22,10 +22,6 @@ namespace Anya_2d
         /// <summary>
         /// Cria um nodo a partir de um nodo pai, um intervalo e duas coordenadas da raiz
         /// </summary>
-        /// <param name="parent"></param>
-        /// <param name="interval"></param>
-        /// <param name="rootx"></param>
-        /// <param name="rooty"></param>
         public Node(Node parent, Interval interval, int rootx, int rooty)
         {
             parentNode = parent;

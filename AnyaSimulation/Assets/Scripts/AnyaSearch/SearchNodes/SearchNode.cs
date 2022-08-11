@@ -2,9 +2,12 @@ using Anya_2d;
 
 public class SearchNode : FibonacciHeapNode<Node>
 {
+    
+    
     public SearchNode parent;
+    
     /// <summary>
-    /// Verifica se o nod ofoi adicionado a lista open
+    /// Verifica se o nodo foi adicionado a lista open
     /// </summary>
     public int search_id;
 

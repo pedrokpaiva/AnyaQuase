@@ -8,19 +8,18 @@ public class GridGeneration : MonoBehaviour
     [SerializeField] private int numNodesXGrid;
     [SerializeField] private int numNodesYGrid;
     [SerializeField] private float distanceNodes;              // o espaçamento de cada nó no grid
+    [SerializeField] int startNodeX;
+    [SerializeField] int startNodeY;
+    [SerializeField] int targetNodeX;
+    [SerializeField] int targetNodeY;
     private GridGraph grid;
 
     private void Awake()
     {
-        Debug.Log("Rodando");
         CreateGrid();
-
-        // start node = (0, 0) ; target node = (numNodesXGrid, numNodesYGrid)
-        Anya pathFinding = new Anya(grid, numNodesXGrid, numNodesYGrid, 1, 1, 3, 3);
+        Anya pathFinding = new Anya(grid, numNodesXGrid, numNodesYGrid, startNodeX, startNodeY, targetNodeX, targetNodeY);
         pathFinding.ComputePath();
-        Debug.Log("banana");
         Printa_path(pathFinding.GetPath());
-        Debug.Log("pronto");
     }
 
     /// <summary>
@@ -32,19 +31,30 @@ public class GridGeneration : MonoBehaviour
         grid = new GridGraph(numNodesXGrid, numNodesYGrid);               // inicializa o grid
 
         // pega a posição no mundo do canto esquerdo do grid 
-        Vector3 worldBottomLeft = transform.position - (Vector3.right * (numNodesXGrid / 2) * distanceNodes) - (Vector3.forward * (numNodesYGrid / 2) * distanceNodes);
+        Vector3 worldUpLeft = transform.position - (Vector3.right * (numNodesXGrid / 2) * distanceNodes) + (Vector3.forward * (numNodesYGrid / 2) * distanceNodes);
 
         for (int x = 0; x < numNodesXGrid; x++)        // pra cada linha da matriz
         {
             for (int y = 0; y < numNodesYGrid; y++)    // pra cada linha da matriz
             {
                 // cria a posição no mundo correspondente a este índice da matriz
-                Vector3 worldPoint = worldBottomLeft + Vector3.right * ((x * distanceNodes) + (distanceNodes / 2)) + Vector3.forward * ((y * distanceNodes) + (distanceNodes / 2));
+                Vector3 worldPoint = worldUpLeft + Vector3.right * ((x * distanceNodes) + (distanceNodes / 2)) - Vector3.forward * ((y * distanceNodes) + (distanceNodes / 2));
                 // checa se nesta posição do mundo está um obstáculo
-                bool walkable = !(Physics.CheckSphere(worldPoint, distanceNodes / 2, unwalkableMask));
+                bool blocked = Physics.CheckSphere(worldPoint, distanceNodes / 2, unwalkableMask);
                 // seta o bloco correspondente no grid
-                grid.SetBlocked(x, y, walkable);
+                grid.SetBlocked(x, y, blocked);
             }
+        }
+        // setando as bordas do grid como bloqueadas
+        for (int x = 0; x < numNodesXGrid; x++)
+        {
+            grid.SetBlocked(x, 0, true);
+            grid.SetBlocked(x, numNodesYGrid - 1, true);
+        }
+        for (int y = 0; y < numNodesYGrid; y++)
+        {
+            grid.SetBlocked(0, y, true);
+            grid.SetBlocked(numNodesXGrid - 1, y, true);
         }
     }
 
@@ -55,15 +65,18 @@ public class GridGeneration : MonoBehaviour
         if (grid != null)
         {
             // pega a posição no mundo do canto esquerdo do grid 
-            Vector3 worldBottomLeft = transform.position - (Vector3.right * (numNodesXGrid / 2) * distanceNodes) - (Vector3.forward * (numNodesYGrid / 2) * distanceNodes);
+            Vector3 worldUpLeft = transform.position - (Vector3.right * (numNodesXGrid / 2) * distanceNodes) + (Vector3.forward * (numNodesYGrid / 2) * distanceNodes);
 
             for (int x = 0; x < numNodesXGrid; x++)        // pra cada linha da matriz
             {
                 for (int y = 0; y < numNodesYGrid; y++)    // pra cada coluna da matriz
                 {
-                    Gizmos.color = grid.IsBlocked(x, y) ? Color.white : Color.red;
+                    if (x == startNodeX && y == startNodeY) Gizmos.color = Color.green;
+                    else if (x == targetNodeX && y == targetNodeY) Gizmos.color = Color.black;
+                    else Gizmos.color = grid.IsBlocked(x, y) ? Color.red : Color.white;
+                    
                     // cria a posição no mundo correspondente a este índice da matriz
-                    Vector3 worldPoint = worldBottomLeft + Vector3.right * ((x * distanceNodes) + (distanceNodes / 2)) + Vector3.forward * ((y * distanceNodes) + (distanceNodes / 2));
+                    Vector3 worldPoint = worldUpLeft + Vector3.right * ((x * distanceNodes) + (distanceNodes / 2)) - Vector3.forward * ((y * distanceNodes) + (distanceNodes / 2));
                     Gizmos.DrawSphere(worldPoint, distanceNodes / 8);    // desenha o cubo representando o nó
                 }
             }
@@ -76,11 +89,15 @@ public class GridGeneration : MonoBehaviour
     private void Printa_path(int[][] path)
     {
         int dimensaoX = path.GetLength(0);
-        Debug.Log(dimensaoX.ToString());
-        for (int x = 0; x < 1; x++)
+
+        if (dimensaoX != 0)
         {
-            Debug.Log("(" + path[x][0] + ", " + path[x][1] + ") ");
+            for (int x = 0; x < 1; x++)
+            {
+                Debug.Log("(" + path[x][0] + ", " + path[x][1] + ") ");
+            }
         }
+        else Debug.Log("Nenhum caminho encontrado.");
     }
 
 }
