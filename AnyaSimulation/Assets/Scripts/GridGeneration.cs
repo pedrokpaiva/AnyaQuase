@@ -92,7 +92,7 @@ public class GridGeneration : MonoBehaviour
 
         if (dimensaoX != 0)
         {
-            for (int x = 0; x < 1; x++)
+            for (int x = 0; x < dimensaoX; x++)
             {
                 Debug.Log("(" + path[x][0] + ", " + path[x][1] + ") ");
             }

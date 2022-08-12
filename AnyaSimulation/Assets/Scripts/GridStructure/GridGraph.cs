@@ -19,13 +19,13 @@ namespace Anya_2d
 
         public GridGraph(int width, int height)
         {
-            sizeX = width;
-            sizeY = height;
+            this.sizeX = width;
+            this.sizeY = height;
 
-            tiles = new bool[sizeY, sizeX];
+            this.tiles = new bool[sizeY, sizeX];
 
-            smallest_step = Math.Min(1 / width, 1 / height);
-            smallest_step_div2 = smallest_step / 2;
+            this.smallest_step = Math.Min(1/(double)width, 1/(double)height);
+            this.smallest_step_div2 = smallest_step / 2;
         }
 
         public int Get_width()

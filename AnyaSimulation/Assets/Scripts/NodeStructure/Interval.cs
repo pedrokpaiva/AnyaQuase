@@ -121,8 +121,7 @@ namespace Anya_2d
         public void SetLeft(double left)
         {
             this.left = left;
-            discrete_left = Math.Abs((int)(left + GridGraph.epsilon) - left) <
-                    GridGraph.epsilon;
+            discrete_left = Math.Abs((int)(left + GridGraph.epsilon) - left) < GridGraph.epsilon;
             if (discrete_left)
             {
                 this.left = (int)(this.left + GridGraph.epsilon);
@@ -145,8 +144,7 @@ namespace Anya_2d
         public void SetRight(double right)
         {
             this.right = right;
-            discrete_right = Math.Abs((int)(right + GridGraph.epsilon) - right) <
-                    GridGraph.epsilon;
+            discrete_right = Math.Abs((int)(right + GridGraph.epsilon) - right) < GridGraph.epsilon;
             if (discrete_right)
             {
                 this.right = (int)(this.right + GridGraph.epsilon);

@@ -119,9 +119,10 @@ public class AnyaSearch
                         insert = (root_hash == p_hash) || (p_rep_hash == p_hash);
                     }
                 }
-
+                
                 if (insert)
                 {
+                    roots_.Remove(root_hash);
                     neighbour.ResetNode(search_id_counter);
                     neighbour.parent = current;
 

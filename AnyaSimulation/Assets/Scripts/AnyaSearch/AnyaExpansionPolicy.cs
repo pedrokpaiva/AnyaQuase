@@ -149,6 +149,31 @@ public class AnyaExpansionPolicy : IExpansionPolicy<Node>
     }
 
     /// <summary>
+    /// Gera a lista de sucessores observáveis a partir da projeção flat.
+    /// </summary>
+    private void Generate_observable_flat__(IntervalProjection projection, int rootx, int rooty, Node parent, List<Node> retval)
+    {
+        Debug.Assert(projection.row == rooty);
+        if (!projection.valid) { return; }
+
+        // Checa se a projeção contém o target
+        bool goal_interval = Contains_target(projection.left, projection.right, projection.row);
+
+        if (projection.intermediate && prune_ && !goal_interval)
+        {
+            // ignore intermediate nodes and project further along the row
+            projection.Project(projection.left, projection.right, projection.row, rootx, rooty, grid_);
+            // check if the projection contains the goal
+            goal_interval = Contains_target(projection.left, projection.right, projection.row);
+        }
+
+        if (!projection.deadend || !prune_ || goal_interval)
+        {
+            retval.Add(new Node(parent, new Interval(projection.left, projection.right, projection.row), rootx, rooty));
+        }
+    }
+
+    /// <summary>
     /// Gera a lista de sucessores do nó.
     /// </summary>
     protected void Generate_successors(Node node, List<Node> retval)
@@ -183,7 +208,7 @@ public class AnyaExpansionPolicy : IExpansionPolicy<Node>
         Node successor = null;
         do
         {
-            succ_right = succ_left;
+            succ_right = succ_left;   
             succ_left = grid_.Scan_left(succ_right, irow);
             if (forced_succ || !Sterile(succ_left, succ_right, sterile_check_row))
             {
@@ -191,7 +216,7 @@ public class AnyaExpansionPolicy : IExpansionPolicy<Node>
                 successor.interval.SetLeft(succ_left < max_left ? max_left : succ_left);
                 retval.Add(successor);
             }
-        } while ((succ_left != succ_right) && (succ_left > max_left));
+        }while ((succ_left != succ_right) && (succ_left > max_left));
 
 
         // TODO: recurse over every node (NB: intermediate check includes goal check) 
@@ -220,9 +245,9 @@ public class AnyaExpansionPolicy : IExpansionPolicy<Node>
     // interval (a, b] we can create two new intervals (a, b) and [b, c]
     private bool Sterile(double left, double right, int row)
     {
-        int r = (int)(right - GridGraph.epsilon);
-        int l = (int)(left + GridGraph.epsilon);
-        bool result = !((grid_.Get_cell_is_traversable(l, row) && grid_.Get_cell_is_traversable(r, row)));
+        int discrete_right = (int)(right - GridGraph.epsilon);
+        int discrete_left = (int)(left + GridGraph.epsilon);
+        bool result = !((grid_.Get_cell_is_traversable(discrete_right, row) && grid_.Get_cell_is_traversable(discrete_left, row)));
         return result;
     }
 
@@ -246,26 +271,22 @@ public class AnyaExpansionPolicy : IExpansionPolicy<Node>
         bool discrete_left = interval.discrete_left;
         bool discrete_right = interval.discrete_right;
 
-        bool rightroot = (int)((uint)(tmp_right - rootx) >> 31) == 1;
-        bool leftroot = (int)((uint)(rootx - tmp_left) >> 31) == 1;
-        bool right_turning_point;
+        bool rightroot = (tmp_right < rootx);  // verdadeiro se rootx > tmp_right, ou seja, se a raiz estiver pra direita do intervalo
+        bool leftroot = (rootx < tmp_left);    // verdadeiro se tmp_left > rootx, ou seja, se a raiz estiver pra esquerda do intervalo
+        bool right_turning_point; 
         bool left_turning_point;
         if (rooty < row)
         {
-            left_turning_point = discrete_left && grid_.Get_point_is_corner(tmp_left, row) &&
-                                 (!grid_.Get_cell_is_traversable(tmp_left - 1, row - 1) || leftroot);
-            right_turning_point = discrete_right && grid_.Get_point_is_corner(tmp_right, row) &&
-                                  (!grid_.Get_cell_is_traversable(tmp_right, row - 1) || rightroot);
+            left_turning_point = discrete_left && grid_.Get_point_is_corner(tmp_left, row) && (!grid_.Get_cell_is_traversable(tmp_left - 1, row - 1) || leftroot);
+            right_turning_point = discrete_right && grid_.Get_point_is_corner(tmp_right, row) && (!grid_.Get_cell_is_traversable(tmp_right, row - 1) || rightroot);
         }
         else
         {
-            left_turning_point = discrete_left && grid_.Get_point_is_corner(tmp_left, row) &&
-                                 (!grid_.Get_cell_is_traversable(tmp_left - 1, row) || leftroot);
-            right_turning_point = discrete_right && grid_.Get_point_is_corner(tmp_right, row) && 
-                                  (!grid_.Get_cell_is_traversable(tmp_right, row) || rightroot);
+            left_turning_point = discrete_left && grid_.Get_point_is_corner(tmp_left, row) && (!grid_.Get_cell_is_traversable(tmp_left - 1, row) || leftroot);
+            right_turning_point = discrete_right && grid_.Get_point_is_corner(tmp_right, row) && (!grid_.Get_cell_is_traversable(tmp_right, row) || rightroot);
         }
 
-        return !((discrete_left && left_turning_point) || (discrete_right && right_turning_point));
+        return !(left_turning_point || right_turning_point);
     }
 
     /// <summary>
@@ -376,31 +397,6 @@ public class AnyaExpansionPolicy : IExpansionPolicy<Node>
         Generate_observable_flat__(projection, (int)root.x, (int)root.y, node, retval);
     }
 
-    /// <summary>
-    /// Gera a lista de sucessores observáveis a partir da projeção flat.
-    /// </summary>
-    private void Generate_observable_flat__(IntervalProjection projection, int rootx, int rooty, Node parent, List<Node> retval)
-    {
-        Debug.Assert(projection.row == rooty);
-        if (!projection.valid) { return; }
-
-        // Checa se a projeção contém o target
-        bool goal_interval = Contains_target(projection.left, projection.right, projection.row);
-        
-        if (projection.intermediate && prune_ && !goal_interval)
-        {
-            // ignore intermediate nodes and project further along the row
-            projection.Project(projection.left, projection.right, projection.row, rootx, rooty, grid_);
-            // check if the projection contains the goal
-            goal_interval = Contains_target(projection.left, projection.right, projection.row);
-        }
-
-        if (!projection.deadend || !prune_ || goal_interval)
-        {
-            retval.Add(new Node(parent, new Interval(projection.left, projection.right, projection.row), rootx, rooty));
-        }
-    }
-
     protected void Flat_node_nobs(Node node, List<Node> retval, IntervalProjection projection)
     {
         if (!projection.valid) { return; }
@@ -422,7 +418,7 @@ public class AnyaExpansionPolicy : IExpansionPolicy<Node>
     {
         int x = (int)n.root.x;
         int y = (int)n.root.y;
-        return y * grid_.Get_width() + x; //AQUI ERA PADDED WIDTH
+        return y * grid_.Get_width() + x; // AQUI ERA PADDED WIDTH
     }
 
     public int GetHashCode(Node v)
