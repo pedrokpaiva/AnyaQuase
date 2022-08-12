@@ -232,13 +232,6 @@ namespace Anya_2d
         {
             int discrete_x = (int)(x + smallest_step), i;
 
-            // se for um beco sem saída ou o ponto não for adjacente a nenhum obstáculo, retorna o próprio ponto
-            // obs: não testa isso caso o ponto seja um canto do grid
-            if (!Get_point_is_grid_corner(discrete_x, y) && (Get_point_is_adjacent_3obstacles(discrete_x, y) || Get_point_is_free(discrete_x, y)))
-            {
-                return discrete_x;
-            }
-
             for (i = discrete_x;  i < sizeX; i++)
             {
                 // se bateu de cara em uma parede, retorna i
@@ -264,13 +257,6 @@ namespace Anya_2d
         public int Scan_left(double x, int y)
         {
             int discrete_x = (int)(x), i;
-
-            // se for um beco sem saída ou o ponto não for adjacente a nenhum obstáculo, retorna o próprio ponto
-            // obs: não testa isso caso o ponto seja um canto do grid
-            if (!Get_point_is_grid_corner(discrete_x, y) && (Get_point_is_adjacent_3obstacles(discrete_x, y) || Get_point_is_free(discrete_x, y)))
-            {
-                return discrete_x;
-            }
 
             for (i = discrete_x - 1; i >= 0; i--)
             {

@@ -191,7 +191,7 @@ public class AnyaExpansionPolicy : IExpansionPolicy<Node>
         {
             projection.Project(node, grid_);
             Cone_node_obs(node, retval, projection);
-            Cone_node_nobs(node, retval, projection);
+            Cone_node_nobs(node, retval, projection); // aqui vem o problema
         }
     }
 
@@ -314,15 +314,14 @@ public class AnyaExpansionPolicy : IExpansionPolicy<Node>
         Split_interval_make_successors(projection.left, projection.right, projection.row, rootx, rooty, projection.sterile_check_row, parent, retval);
     }
 
-    // there are two kinds of non-observable successors
+    // there are three kinds of non-observable successors
     // (i) conical successors that are adjacent to an observable projection
     // (ii) flat successors that are adjacent to the current interval
     // (iii) conical successors that are not ajdacent to to any observable
     // projection or the current interval (i.e the angle from the root
     // to the interval is too low to observe any point from the next row)
     // TODO: seems like too many branching statements in this function. consolidate?
-    protected void Cone_node_nobs(Node node,
-            List<Node> retval, IntervalProjection projection)
+    protected void Cone_node_nobs(Node node, List<Node> retval, IntervalProjection projection)
     {
         if (!projection.valid) { return; }
 
