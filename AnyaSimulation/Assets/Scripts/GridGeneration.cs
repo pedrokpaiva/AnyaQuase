@@ -7,19 +7,34 @@ public class GridGeneration : MonoBehaviour
     [SerializeField] private LayerMask unwalkableMask;        // a mascára da layer de obstáculos 
     [SerializeField] private int numNodesXGrid;
     [SerializeField] private int numNodesYGrid;
-    [SerializeField] private float distanceNodes;              // o espaçamento de cada nó no grid
+    [SerializeField] private float distanceNodes;             // o espaçamento de cada nó no grid
     [SerializeField] int startNodeX;
     [SerializeField] int startNodeY;
     [SerializeField] int targetNodeX;
     [SerializeField] int targetNodeY;
     private GridGraph grid;
+    private Anya pathFinding;
+
+    [SerializeField] Transform seeker;                 // transform do drone
+    [SerializeField] Rigidbody seekerRB;               // rigidbody do drone
+    int destinoX;                                     // destino
 
     private void Awake()
     {
         CreateGrid();
-        Anya pathFinding = new Anya(grid, numNodesXGrid, numNodesYGrid, startNodeX, startNodeY, targetNodeX, targetNodeY);
+        pathFinding = new Anya(grid, numNodesXGrid, numNodesYGrid, startNodeX, startNodeY, targetNodeX, targetNodeY);
         pathFinding.ComputePath();
         Printa_path(pathFinding.GetPath());
+
+        // pega a posição no mundo do canto esquerdo do grid 
+        Vector3 worldUpLeft = transform.position - (Vector3.right * (numNodesXGrid / 2) * distanceNodes) + (Vector3.forward * (numNodesYGrid / 2) * distanceNodes);
+        seeker.transform.position = worldUpLeft + Vector3.right * ((startNodeX * distanceNodes) + (distanceNodes / 2)) - Vector3.forward * ((startNodeY * distanceNodes) + (distanceNodes / 2)); //bota o drone na altura inicial
+        destinoX = 1;
+    }
+
+    private void Update()
+    {
+        Follow_Path(pathFinding.GetPath());
     }
 
     /// <summary>
@@ -98,6 +113,40 @@ public class GridGeneration : MonoBehaviour
             }
         }
         else Debug.Log("Nenhum caminho encontrado.");
-    }
 
+    }
+        
+    void Follow_Path(int[][] path)      // função que um objeto segue um caminho de nodos
+    {
+        int dimensaoX = path.GetLength(0);
+
+        if (dimensaoX != 0 && destinoX != dimensaoX)                // se este nodo é o final, chegou ao destino
+        {
+            // pega a posição no mundo do canto esquerdo do grid 
+            Vector3 worldUpLeft = transform.position - (Vector3.right * (numNodesXGrid / 2) * distanceNodes) + (Vector3.forward * (numNodesYGrid / 2) * distanceNodes);
+            // cria a posição no mundo correspondente ao destino atual na matriz
+            Vector3 destino = worldUpLeft + Vector3.right * ((path[destinoX][0] * distanceNodes) + (distanceNodes / 2)) - Vector3.forward * ((path[destinoX][1] * distanceNodes) + (distanceNodes / 2));
+
+
+            if (seeker.transform.position != destino)          // enquanto a posição do objeto não é o destino
+            {
+                seeker.transform.LookAt(destino);              // direciona o objeto ao destino
+                seeker.transform.position = Vector3.MoveTowards(seeker.transform.position, destino, 10 * Time.deltaTime);
+
+                // quando a distância é quase igual, zera a velocidade e seta a posição
+                if (Vector3.Distance(seeker.transform.position, destino) < 0.1f)
+                {
+                    seeker.transform.position = new Vector3(destino.x, destino.y, destino.z);
+                }
+            }
+            // se chegou ao nodo destino, vai para o próximo 
+            else destinoX++;
+
+            if (destinoX == dimensaoX)                // se este nodo é o final, chegou ao destino
+            {
+                seekerRB.velocity = Vector3.zero;     // zera a velocidade 
+            }
+        }
+    }
 }
+
